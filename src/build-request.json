@@ -1,92 +1,62 @@
 {
   "kind": "build_request",
-  "title": "Step 2: Add per-market verified HTTP fetch methods with strict allowlist + fix deploy-breaking actor API mismatch",
+  "title": "Show live FIAT currencies in Add-Asset search using fx_rates.json cache",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-6",
-      "text": "In `backend/main.mo`, add four dedicated **backend update methods** to fetch external market data by category—one each for **crypto**, **stocks**, **fiat**, and **commodities**—implemented as separate functions (not a single generic fetch). Each method must perform verified HTTPS outcalls using the existing `OutCall.httpGetRequest(..., transform)` pattern and return the raw response text (or a structured error via trap) for now.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "recent-4",
-          "recent-8"
-        ],
-        "quotes": [
-          "please proceed with Step 2: Add individual endpoint fetch functions (crypto, stocks, fiat, commodities) with safe verified HTTP calls.",
-          "build please"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Backend compiles with four separate update methods for crypto/stocks/fiat/commodities external fetches.",
-        "Each method uses `OutCall.httpGetRequest(url, [], transform)` and the existing `transform` query method.",
-        "Each method is callable via Candid and returns the fetched response body as `Text`."
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "text": "Implement a strict, hardcoded **HTTPS allowlist** for outbound requests used by the new per-market fetch methods. The backend must reject (trap) any URL that is not explicitly allowlisted, including any non-HTTPS URL. The allowlist may be maintained as one list per market type or a single allowlist keyed by market type, but the per-market methods must only be able to call their own allowlisted endpoints.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "recent-4"
-        ],
-        "quotes": [
-          "Add individual endpoint fetch functions (crypto, stocks, fiat, commodities) with safe verified HTTP calls."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Calling a per-market fetch method with a URL not on the allowlist traps with a clear error message.",
-        "Calling a per-market fetch method with a non-HTTPS URL traps with a clear error message.",
-        "Only the hardcoded allowlisted URLs are reachable; the canister cannot be used as an arbitrary open proxy."
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "text": "Update or replace the existing `fetchExternalData(url : Text)` backend method so it is no longer a general-purpose arbitrary-URL fetch for normal users. Align it with the same allowlist safety model (e.g., remove it, restrict it to admins, or route it through the same allowlist verification), and ensure the backend Candid interface matches the implemented methods to prevent deploy/interface mismatches.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "recent-4"
-        ],
-        "quotes": [
-          "Add individual endpoint fetch functions (crypto, stocks, fiat, commodities) with safe verified HTTP calls."
-        ]
-      },
-      "acceptanceCriteria": [
-        "`fetchExternalData` can no longer successfully fetch arbitrary user-provided URLs.",
-        "If `fetchExternalData` remains available, it enforces the same HTTPS + allowlist checks (or is admin-only).",
-        "The deployed backend Candid interface includes only the intended public methods and matches the implementation."
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "text": "Fix the known deployment-blocking backend/frontend actor API mismatch by ensuring the backend exposes a public method matching the frontend initialization call `actor._initializeAccessControlWithSecret(adminToken)` (as documented), or otherwise make the backend initialization compatible **without modifying immutable frontend paths**. After the fix, the backend must deploy and the frontend actor must initialize without runtime errors.",
+      "id": "REQ-21",
+      "text": "When the user selects the “Fiat” market type on AddAssetPage, load the FIAT currencies list from the backend-cached VPS1 endpoint (via the existing backend methods fetchFiatVPS1Data() + getFiatVPS1ValidationResult()) and render those currencies inside the existing Add‑Asset search results list (replacing the current static fiatCatalog list while data is available). Parse the JSON body returned from http://74.208.158.232/fx_rates.json and map each rates entry into an Asset object: marketType=fiat, ticker=countryCode (e.g., \"ABW\"), name=countryName (e.g., \"Aruba, Kingdom of the Netherlands\").",
       "target": "both",
       "source": {
         "messageIds": [
-          "recent-6"
+          "msg-6",
+          "msg-7"
         ],
         "quotes": [
-          "yes please investigate the issue and try one more time"
+          "yes under Add‑Asset search list i want to see real list fetched from http://74.208.158.232/fx_rates.json",
+          "build"
         ]
       },
       "acceptanceCriteria": [
-        "Backend deploy succeeds (no init-time failure).",
-        "Frontend actor initialization no longer throws due to missing `_initializeAccessControlWithSecret`.",
-        "No changes are made to immutable frontend paths (including `frontend/src/hooks/useActor.ts`)."
+        "Selecting MarketType.fiat in AddAssetPage shows FIAT search results sourced from the VPS1 fx_rates.json response (not only the hardcoded frontend fiat list) when backend validationStatus is #valid.",
+        "FIAT assets are searchable by both ticker (countryCode) and name (countryName) using the existing search input in AssetSearch.",
+        "The mapping is correct: rates[\"ABW\"].countryCode => Asset.ticker \"ABW\" and rates[\"ABW\"].countryName => Asset.name \"Aruba, Kingdom of the Netherlands\".",
+        "If the backend has no cached FIAT result yet (null) or the cached result is invalid, the UI does not crash and provides a clear in-place empty/error message in the FIAT results area (in English)."
+      ]
+    },
+    {
+      "id": "REQ-22",
+      "text": "Add a frontend data hook (or extend existing hooks) so that entering the Fiat market type automatically triggers a fetch/refresh of the VPS1 FIAT cache by calling fetchFiatVPS1Data(), then reads getFiatVPS1ValidationResult() and keeps the parsed FIAT Asset list in React Query cache for use by AssetSearch. Ensure loading and error states are handled in the Add‑Asset search UI without blocking other market types.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6",
+          "msg-7"
+        ],
+        "quotes": [
+          "i don't see list of fiat currencies appears. what we should do to make it happen?",
+          "build"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Switching to Fiat market type triggers a fetch (unless there is already a recent valid cached result and the implementation chooses not to refetch immediately).",
+        "While FIAT data is being fetched, the FIAT search area shows a loading indicator/message (English) instead of an empty list.",
+        "If the fetch fails, an error message is shown and the user can retry by re-selecting Fiat or via an explicit retry control implemented in the FIAT search area.",
+        "Switching to other market types (Crypto/Stocks/Commodities) continues to use the existing static catalog behavior and is unaffected by FIAT fetch failures."
       ]
     }
   ],
   "constraints": [
-    "Keep all Motoko logic in the single actor at `backend/main.mo` (no additional backend services).",
-    "Do not modify any paths listed in `frontend.immutablePaths` (must resolve compatibility via backend/public API or non-immutable frontend files only).",
-    "Outbound HTTP requests must be verified HTTP outcalls and restricted to a hardcoded HTTPS allowlist; do not introduce any open-proxy capability."
+    "Do not edit files under frontend/src/components/ui (Shadcn components are read-only).",
+    "Do not edit immutable frontend hook paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx.",
+    "Keep backend logic within the single Motoko actor at backend/main.mo; only add migration.mo if a stable-state change is required (this request should not require stable migration).",
+    "Preserve the exact endpoint URL for FIAT data: http://74.208.158.232/fx_rates.json."
   ],
   "nonGoals": [
-    "UI modernization/design-system changes across the app (out of scope for this Step 2 build).",
-    "Adding base currency selection, conversion logic, or dashboard analytics enhancements (not part of Step 2).",
-    "Introducing external databases, third-party auth providers, websockets, or additional backend canisters."
+    "Implementing base-currency conversion across the dashboard and holdings.",
+    "Adding crypto/stocks/commodities live catalogs or changing their ordering rules.",
+    "Changing access-control roles/permissions beyond what is required for FIAT list visibility in Add-Asset.",
+    "Building new UI pages beyond wiring the FIAT list into the existing Add-Asset search."
   ],
   "imageRequirements": {
     "required": [],

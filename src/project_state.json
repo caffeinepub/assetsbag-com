@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 49,
+  "projectStateVersion": 77,
   "summary": "Build AssetsBag.com, an ICP portfolio tracker with real market data for crypto, stocks, commodities, and fiat using verified HTTP endpoints; the canister auto-refreshes and caches merged datasets every 2 minutes, supports base-currency conversion, and powers enhanced dashboard analytics (value, P/L, allocation chart).",
   "existing_features": [
     {
@@ -176,21 +176,70 @@
       "version": 1
     },
     {
-      "id": "feature-fix-the-known-deployment-blocking-backend-frontend-actor-api-mismatch-by-ensuring-the-backend-exposes-a-public-method-matching-the-frontend-initialization-call-actor-initializeaccesscontrolwithsecret-admintoken-as-documented-or-otherwise-make-the-backend-initialization-compatible-without-modifying-immutable-frontend-paths-after-the-fix-the-backend-must-deploy-and-the-frontend-actor-must-initialize-without-runtime-errors",
-      "title": "Fix the known deployment-blocking backend/frontend actor API mismatch by ensuring the backend exposes a public method matching the frontend initialization call `actor._initializeAccessControlWithSecret(adminToken)` (as documented), or otherwise make the backend initialization compatible **without modifying immutable frontend paths**. After the fix, the backend must deploy and the frontend actor must initialize without runtime errors.",
+      "id": "IF-14",
+      "title": "Modernized UI styling with Shadcn UI + Tailwind component system",
+      "synonyms": [
+        "shadcn-ui",
+        "design system refresh",
+        "modern UI styling"
+      ],
+      "description": "App UI styling and component set updated to a cleaner modern design using a Shadcn UI/Tailwind-based component library (buttons, dialogs, tables, navigation, etc.) consistently across pages and flows.",
       "reqIds": [
-        "REQ-9"
+        "AR-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-15",
+      "title": "Backend access-control initialization method compatible with immutable frontend call",
+      "synonyms": [
+        "_initializeAccessControlWithSecret",
+        "candid mismatch fix",
+        "frontend init compatibility"
+      ],
+      "description": "Backend exposes a public method `_initializeAccessControlWithSecret(adminToken : Text) : async ()` to initialize/activate access control in a way that matches the immutable frontend initialization call path, preventing deploy/runtime failures due to missing method.",
+      "reqIds": [
+        "REQ-9",
+        "REQ-13",
+        "REQ-17"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-16",
+      "title": "FIAT-only Step 3 slice: VPS1 fx_rates fetch+validate+in-memory store with inspection query + frontend test hook/page",
+      "synonyms": [
+        "FIAT VPS1 validation",
+        "fx_rates.json validator",
+        "useFiatVPS1",
+        "FiatTestPage"
+      ],
+      "description": "Backend implements a minimal FIAT-only Step 3 flow that (a) permission-gates a dedicated update method to fetch `http://74.208.158.232/fx_rates.json`, (b) validates response deterministically (non-empty + basic JSON shape), (c) stores the latest validation result in non-stable memory including URL, timestamp, raw body (with max-size cap and truncation), and valid/invalid + error, and (d) exposes a permission-gated query method to inspect the latest stored result without triggering a new outcall. Frontend adds a corresponding hook/test page for inspecting FIAT VPS1 results.",
+      "reqIds": [
+        "REQ-18",
+        "REQ-19",
+        "REQ-20"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-when-the-user-selects-the-fiat-market-type-on-addassetpage-load-the-fiat-currencies-list-from-the-backend-cached-vps1-endpoint-via-the-existing-backend-methods-fetchfiatvps1data-getfiatvps1validationresult-and-render-those-currencies-inside-the-existing-add-asset-search-results-list-replacing-the-current-static-fiatcatalog-list-while-data-is-available-parse-the-json-body-returned-from-http-74-208-158-232-fx-rates-json-and-map-each-rates-entry-into-an-asset-object-markettype-fiat-ticker-countrycode-e-g-abw-name-countryname-e-g-aruba-kingdom-of-the-netherlands",
+      "title": "When the user selects the “Fiat” market type on AddAssetPage, load the FIAT currencies list from the backend-cached VPS1 endpoint (via the existing backend methods fetchFiatVPS1Data() + getFiatVPS1ValidationResult()) and render those currencies inside the existing Add‑Asset search results list (replacing the current static fiatCatalog list while data is available). Parse the JSON body returned from http://74.208.158.232/fx_rates.json and map each rates entry into an Asset object: marketType=fiat, ticker=countryCode (e.g., \"ABW\"), name=countryName (e.g., \"Aruba, Kingdom of the Netherlands\").",
+      "reqIds": [
+        "REQ-21"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-frontend-data-hook-or-extend-existing-hooks-so-that-entering-the-fiat-market-type-automatically-triggers-a-fetch-refresh-of-the-vps1-fiat-cache-by-calling-fetchfiatvps1data-then-reads-getfiatvps1validationresult-and-keeps-the-parsed-fiat-asset-list-in-react-query-cache-for-use-by-assetsearch-ensure-loading-and-error-states-are-handled-in-the-add-asset-search-ui-without-blocking-other-market-types",
+      "title": "Add a frontend data hook (or extend existing hooks) so that entering the Fiat market type automatically triggers a fetch/refresh of the VPS1 FIAT cache by calling fetchFiatVPS1Data(), then reads getFiatVPS1ValidationResult() and keeps the parsed FIAT Asset list in React Query cache for use by AssetSearch. Ensure loading and error states are handled in the Add‑Asset search UI without blocking other market types.",
+      "reqIds": [
+        "REQ-22"
       ],
       "version": 1
     }
   ],
   "new_feature_requests": [
-    {
-      "id": "AR-6",
-      "summary": "Modernize UI styling across the app (clean, modern design system).",
-      "reqIds": [],
-      "status": "pending"
-    },
     {
       "id": "AR-11",
       "summary": "Add base currency support: USD default plus user-selectable fiat dropdown with instant conversion using cached FX rates (rateUSD semantics).",
@@ -257,26 +306,86 @@
     },
     {
       "id": "AR-20",
-      "summary": "In `backend/main.mo`, add four dedicated **backend update methods** to fetch external market data by category—one each for **crypto**, **stocks**, **fiat**, and **commodities**—implemented as separate functions (not a single generic fetch). Each method must perform verified HTTPS outcalls using the existing `OutCall.httpGetRequest(..., transform)` pattern and return the raw response text (or a structured error via trap) for now.",
+      "summary": "Step 3: Validate all market-data endpoint responses independently (crypto/stocks/fiat/commodities) and store the raw/validated results temporarily in memory for inspection before merging/caching.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-21",
+      "summary": "In `backend/main.mo`, add in-memory, non-stable storage for per-market endpoint validation results (crypto, stocks, fiat, commodities). Each stored result must include: the requested allowlisted URL, a timestamp, the raw HTTP response body (Text), and a validation status (valid/invalid) with an error message when invalid.",
       "reqIds": [
         "REQ-6"
       ],
       "status": "pending"
     },
     {
-      "id": "AR-21",
-      "summary": "Implement a strict, hardcoded **HTTPS allowlist** for outbound requests used by the new per-market fetch methods. The backend must reject (trap) any URL that is not explicitly allowlisted, including any non-HTTPS URL. The allowlist may be maintained as one list per market type or a single allowlist keyed by market type, but the per-market methods must only be able to call their own allowlisted endpoints.",
+      "id": "AR-22",
+      "summary": "In `backend/main.mo`, implement dedicated backend update methods to validate endpoint responses independently for each market category (crypto/stocks/fiat/commodities). Each validation method must: (1) enforce the existing access-control permission checks, (2) reject any URL not in the existing hardcoded HTTPS allowlist for that market, (3) perform the HTTP GET using the existing `OutCall.httpGetRequest(..., transform)` pattern, (4) validate the returned response body using deterministic checks (e.g., non-empty and basic JSON shape checks such as starting with '{' or '[' after trimming), and (5) store the raw/validated result in the corresponding in-memory buffer.",
       "reqIds": [
         "REQ-7"
       ],
       "status": "pending"
     },
     {
-      "id": "AR-22",
-      "summary": "Update or replace the existing `fetchExternalData(url : Text)` backend method so it is no longer a general-purpose arbitrary-URL fetch for normal users. Align it with the same allowlist safety model (e.g., remove it, restrict it to admins, or route it through the same allowlist verification), and ensure the backend Candid interface matches the implemented methods to prevent deploy/interface mismatches.",
+      "id": "AR-23",
+      "summary": "In `backend/main.mo`, expose query methods to inspect the latest stored validation results for each market category (crypto/stocks/fiat/commodities) without triggering new HTTP outcalls. Access to these inspection query methods must be permission-gated consistently with the existing access-control model.",
       "reqIds": [
         "REQ-8"
       ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-25",
+      "summary": "In `backend/main.mo`, add in-memory (non-stable) storage for per-market endpoint validation results for crypto, stocks, fiat, and commodities. Each stored result must include: requested allowlisted URL (Text), timestamp, raw HTTP response body (Text), and validation status (valid/invalid) with an error message when invalid.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-26",
+      "summary": "In `backend/main.mo`, implement dedicated update methods to validate endpoint responses independently for each market category (crypto/stocks/fiat/commodities). Each validation method must: (1) enforce the existing access-control permission checks, (2) reject any URL not in the existing hardcoded HTTPS allowlist for that market, (3) perform the HTTP GET using the existing `OutCall.httpGetRequest(..., transform)` pattern, (4) validate the returned response body using deterministic checks (at minimum: non-empty after trimming and basic JSON shape check such as starting with '{' or '['), and (5) store the raw/validated result in the corresponding in-memory buffer.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-27",
+      "summary": "In `backend/main.mo`, expose query methods to inspect the latest stored validation results for each market category (crypto/stocks/fiat/commodities) without triggering new HTTP outcalls. Access to these inspection query methods must be permission-gated consistently with the existing access-control model.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-29",
+      "summary": "In `backend/main.mo`, add in-memory (non-stable) storage for per-market endpoint validation results for crypto, stocks, fiat, and commodities. Each stored result must include: requested allowlisted URL (Text), timestamp, raw HTTP response body (Text), and validation status (valid/invalid) with an error message when invalid.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-30",
+      "summary": "In `backend/main.mo`, implement dedicated backend update methods to validate endpoint responses independently for each market category (crypto/stocks/fiat/commodities). Each validation method must: (1) enforce the existing access-control permission checks, (2) reject any URL not in the existing hardcoded HTTPS allowlist for that market, (3) perform the HTTP GET using the existing `OutCall.httpGetRequest(..., transform)` pattern, (4) validate the returned response body using deterministic checks (at minimum: non-empty after trimming and basic JSON shape check such as starting with '{' or '['), and (5) store the raw/validated result in the corresponding in-memory buffer.",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-31",
+      "summary": "In `backend/main.mo`, expose query methods to inspect the latest stored validation results for each market category (crypto/stocks/fiat/commodities) without triggering new HTTP outcalls. Access to these inspection query methods must be permission-gated consistently with the existing access-control model.",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-32",
+      "summary": "Wire real FIAT currencies list from cached `http://74.208.158.232/fx_rates.json` into the existing Add‑Asset search list (Fiat market type), mapping the rates object (countryCode/countryName/rateUSD/date) into searchable catalog entries.",
+      "reqIds": [],
       "status": "pending"
     }
   ],
@@ -290,11 +399,17 @@
     "Crypto & stocks datasets must be merged across all 4 endpoints and sorted by marketCap descending to drive UI search; fiat & commodities are not sorted (use natural endpoint order).",
     "Canister runs fully automated background updates every 2 minutes: fetch all endpoints, rebuild cache, store with timestamp; no manual refresh.",
     "Deployment troubleshooting artifacts added: follow `frontend/docs/rebuild-checklist.md` for clean rebuild steps and `frontend/docs/deploy-failure-root-cause.md` for the current deploy-failure investigation notes.",
-    "Build/template infrastructure updated (Dockerfile, deploy.sh, icp.yaml, package/pnpm workspace, scripts) to support reproducible builds and deployment diagnostics."
+    "UI component system standardized on Shadcn UI + Tailwind (shared UI primitives under frontend/src/components/ui/*)."
   ],
   "known_issues": [
     "Deployment failed during canister deploy after code generation (likely Motoko compile error or canister constraint/size issue); needs clean rebuild and inspection of multi-VPS data-pipeline integration.",
-    "Step 2 implementation attempt failed due to an AI/tooling execution error; need to investigate why the request did not run and retry adding per-market endpoint fetch functions (crypto/stocks/fiat/commodities) with verified HTTP calls."
+    "Step 2 implementation attempt failed due to an AI/tooling execution error; need to investigate why the request did not run and retry adding per-market endpoint fetch functions (crypto/stocks/fiat/commodities) with verified HTTP calls.",
+    "Step 3 implementation attempt failed due to an AI/tooling execution error; need to investigate why the request did not run and retry implementing endpoint validation + in-memory storage.",
+    "Build/tool execution fails when attempting Step 3 immediately after creating the specification blueprint; needs investigation of the build executor/tooling pipeline rather than code logic alone.",
+    "FIAT endpoint is HTTP (not HTTPS), which may conflict with any planned 'HTTPS-only allowlist' rule for outcalls and could block fetching unless the safety model is adjusted.",
+    "Need to define/confirm maximum safe size/retention for in-memory raw HTTP response buffers to avoid exceeding canister memory limits.",
+    "Step 3 (endpoint validation + in-memory storage) repeatedly failed in the build executor/tooling; proceeding by narrowing scope to a FIAT-only fetch+validate+store slice to unblock testing.",
+    "FIAT currencies/rates list is not appearing in the UI yet (user cannot test); need to wire the FIAT cached/validated fx_rates data to the frontend (e.g., fiat search/catalog or selector) and confirm the expected data shape/field mapping (rates map keyed by countryCode with countryName/rateUSD/date)."
   ],
   "isFixRequest": true,
   "gameProjectType": "none",

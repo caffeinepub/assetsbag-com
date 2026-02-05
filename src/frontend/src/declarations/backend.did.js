@@ -13,8 +13,35 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const MarketType = IDL.Variant({
+  'stocks' : IDL.Null,
+  'commodities' : IDL.Null,
+  'fiat' : IDL.Null,
+  'crypto' : IDL.Null,
+});
+export const Asset = IDL.Record({
+  'marketType' : MarketType,
+  'ticker' : IDL.Text,
+  'name' : IDL.Text,
+});
 export const HTTPSUrl = IDL.Text;
+export const FiatAssetCacheEntry = IDL.Record({
+  'expired' : IDL.Bool,
+  'assets' : IDL.Vec(Asset),
+  'timestamp' : IDL.Int,
+});
 export const UserProfile = IDL.Record({ 'name' : IDL.Text });
+export const FiatVPS1ValidationResult = IDL.Record({
+  'validationStatus' : IDL.Variant({
+    'valid' : IDL.Null,
+    'invalid' : IDL.Null,
+  }),
+  'rawResponseBody' : IDL.Text,
+  'isTruncated' : IDL.Bool,
+  'errorMessage' : IDL.Opt(IDL.Text),
+  'requestedUrl' : IDL.Text,
+  'timestamp' : IDL.Int,
+});
 export const http_header = IDL.Record({
   'value' : IDL.Text,
   'name' : IDL.Text,
@@ -37,13 +64,31 @@ export const TransformationOutput = IDL.Record({
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'cacheFiatVPS1Data' : IDL.Func([IDL.Text, IDL.Vec(Asset)], [IDL.Bool], []),
+  'expireFiatAssetCacheEntries' : IDL.Func([IDL.Vec(IDL.Text)], [IDL.Nat], []),
   'fetchCommoditiesData' : IDL.Func([HTTPSUrl], [IDL.Text], []),
   'fetchCryptoData' : IDL.Func([HTTPSUrl], [IDL.Text], []),
   'fetchExternalData' : IDL.Func([IDL.Text], [IDL.Text], []),
   'fetchFiatData' : IDL.Func([HTTPSUrl], [IDL.Text], []),
+  'fetchFiatVPS1Data' : IDL.Func([], [IDL.Text], []),
   'fetchStocksData' : IDL.Func([HTTPSUrl], [IDL.Text], []),
+  'getCachedFiatAssets' : IDL.Func(
+      [IDL.Text],
+      [IDL.Opt(FiatAssetCacheEntry)],
+      ['query'],
+    ),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getFiatCacheMetaData' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Int, IDL.Bool))],
+      ['query'],
+    ),
+  'getFiatVPS1ValidationResult' : IDL.Func(
+      [],
+      [IDL.Opt(FiatVPS1ValidationResult)],
+      ['query'],
+    ),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -66,8 +111,35 @@ export const idlFactory = ({ IDL }) => {
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
+  const MarketType = IDL.Variant({
+    'stocks' : IDL.Null,
+    'commodities' : IDL.Null,
+    'fiat' : IDL.Null,
+    'crypto' : IDL.Null,
+  });
+  const Asset = IDL.Record({
+    'marketType' : MarketType,
+    'ticker' : IDL.Text,
+    'name' : IDL.Text,
+  });
   const HTTPSUrl = IDL.Text;
+  const FiatAssetCacheEntry = IDL.Record({
+    'expired' : IDL.Bool,
+    'assets' : IDL.Vec(Asset),
+    'timestamp' : IDL.Int,
+  });
   const UserProfile = IDL.Record({ 'name' : IDL.Text });
+  const FiatVPS1ValidationResult = IDL.Record({
+    'validationStatus' : IDL.Variant({
+      'valid' : IDL.Null,
+      'invalid' : IDL.Null,
+    }),
+    'rawResponseBody' : IDL.Text,
+    'isTruncated' : IDL.Bool,
+    'errorMessage' : IDL.Opt(IDL.Text),
+    'requestedUrl' : IDL.Text,
+    'timestamp' : IDL.Int,
+  });
   const http_header = IDL.Record({ 'value' : IDL.Text, 'name' : IDL.Text });
   const http_request_result = IDL.Record({
     'status' : IDL.Nat,
@@ -87,13 +159,35 @@ export const idlFactory = ({ IDL }) => {
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'cacheFiatVPS1Data' : IDL.Func([IDL.Text, IDL.Vec(Asset)], [IDL.Bool], []),
+    'expireFiatAssetCacheEntries' : IDL.Func(
+        [IDL.Vec(IDL.Text)],
+        [IDL.Nat],
+        [],
+      ),
     'fetchCommoditiesData' : IDL.Func([HTTPSUrl], [IDL.Text], []),
     'fetchCryptoData' : IDL.Func([HTTPSUrl], [IDL.Text], []),
     'fetchExternalData' : IDL.Func([IDL.Text], [IDL.Text], []),
     'fetchFiatData' : IDL.Func([HTTPSUrl], [IDL.Text], []),
+    'fetchFiatVPS1Data' : IDL.Func([], [IDL.Text], []),
     'fetchStocksData' : IDL.Func([HTTPSUrl], [IDL.Text], []),
+    'getCachedFiatAssets' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(FiatAssetCacheEntry)],
+        ['query'],
+      ),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getFiatCacheMetaData' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Int, IDL.Bool))],
+        ['query'],
+      ),
+    'getFiatVPS1ValidationResult' : IDL.Func(
+        [],
+        [IDL.Opt(FiatVPS1ValidationResult)],
+        ['query'],
+      ),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],

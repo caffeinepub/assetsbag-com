@@ -3,6 +3,7 @@ import { useInternetIdentity } from './hooks/useInternetIdentity';
 import AuthGate from './components/auth/AuthGate';
 import DashboardPage from './pages/DashboardPage';
 import AddAssetPage from './pages/AddAssetPage';
+import FiatTestPage from './pages/FiatTestPage';
 import AppShell from './components/layout/AppShell';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from 'next-themes';
@@ -35,8 +36,15 @@ const addAssetRoute = createRoute({
   component: AddAssetPage,
 });
 
+// FIAT Test route
+const fiatTestRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/fiat-test',
+  component: FiatTestPage,
+});
+
 // Create router
-const routeTree = rootRoute.addChildren([dashboardRoute, addAssetRoute]);
+const routeTree = rootRoute.addChildren([dashboardRoute, addAssetRoute, fiatTestRoute]);
 const router = createRouter({ routeTree });
 
 // Declare router type for TypeScript

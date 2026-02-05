@@ -10,7 +10,30 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface Asset {
+  'marketType' : MarketType,
+  'ticker' : string,
+  'name' : string,
+}
+export interface FiatAssetCacheEntry {
+  'expired' : boolean,
+  'assets' : Array<Asset>,
+  'timestamp' : bigint,
+}
+export interface FiatVPS1ValidationResult {
+  'validationStatus' : { 'valid' : null } |
+    { 'invalid' : null },
+  'rawResponseBody' : string,
+  'isTruncated' : boolean,
+  'errorMessage' : [] | [string],
+  'requestedUrl' : string,
+  'timestamp' : bigint,
+}
 export type HTTPSUrl = string;
+export type MarketType = { 'stocks' : null } |
+  { 'commodities' : null } |
+  { 'fiat' : null } |
+  { 'crypto' : null };
 export interface TransformationInput {
   'context' : Uint8Array,
   'response' : http_request_result,
@@ -33,13 +56,22 @@ export interface http_request_result {
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'cacheFiatVPS1Data' : ActorMethod<[string, Array<Asset>], boolean>,
+  'expireFiatAssetCacheEntries' : ActorMethod<[Array<string>], bigint>,
   'fetchCommoditiesData' : ActorMethod<[HTTPSUrl], string>,
   'fetchCryptoData' : ActorMethod<[HTTPSUrl], string>,
   'fetchExternalData' : ActorMethod<[string], string>,
   'fetchFiatData' : ActorMethod<[HTTPSUrl], string>,
+  'fetchFiatVPS1Data' : ActorMethod<[], string>,
   'fetchStocksData' : ActorMethod<[HTTPSUrl], string>,
+  'getCachedFiatAssets' : ActorMethod<[string], [] | [FiatAssetCacheEntry]>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getFiatCacheMetaData' : ActorMethod<[], Array<[string, bigint, boolean]>>,
+  'getFiatVPS1ValidationResult' : ActorMethod<
+    [],
+    [] | [FiatVPS1ValidationResult]
+  >,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,

@@ -1,60 +1,31 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T00:50:07.236Z",
-  "summary": "Backend work partially implements per-market HTTP fetch methods and allowlists, but the diff does not show explicit non-HTTPS rejection, does not show any changes to the legacy arbitrary fetchExternalData safety model, and does not show the required `_initializeAccessControlWithSecret` method to fix the deployment-blocking actor API mismatch. Additionally, substantial frontend feature/UI work was added that was not requested for this Step 2 build.",
+  "generatedAt": "2026-02-05T02:13:29.246Z",
+  "summary": "Frontend implements a FIAT VPS1 parsing + React Query hook and wires it into AssetSearch with loading/error/retry states and a fallback to the static catalog. However, the diff does not show the required fixed FIAT endpoint URL (http://74.208.158.232/fx_rates.json) being used/allowlisted on the backend; the only visible FIAT allowlist entries are different HTTPS URLs.",
   "missing_requirements": [
     {
-      "id": "REQ-7",
-      "requirement": "Reject (trap) any per-market fetch call using a non-HTTPS URL with a clear error message, and ensure per-market methods can only call their own allowlisted endpoints (no open proxy).",
-      "reason": "The diff shows per-market allowlist checks, but does not show any explicit validation that the provided URL is HTTPS (e.g., checking for the \"https://\" scheme). A `type HTTPSUrl = Text` alias does not enforce HTTPS at runtime.",
+      "id": "REQ-21",
+      "requirement": "Preserve and use the exact FIAT data endpoint URL: http://74.208.158.232/fx_rates.json (backend-cached VPS1 endpoint used by fetchFiatVPS1Data/getFiatVPS1ValidationResult).",
+      "reason": "In the visible backend changes, the FIAT allowlist does not include the required URL and instead lists unrelated endpoints; the required http://74.208.158.232/fx_rates.json is not present in the diff summary, so it is not evidenced that the backend fetch/cache is pointed at the mandated endpoint.",
       "evidence": [
         "backend/main.mo"
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "requirement": "Update/replace `fetchExternalData(url : Text)` so it is no longer a general-purpose arbitrary-URL fetch; enforce HTTPS + allowlist (or remove/admin-only), and ensure the deployed backend Candid interface matches implementation.",
-      "reason": "The diff does not show `fetchExternalData` being removed or restricted, nor any allowlist enforcement being added to it, nor any explicit interface alignment changes; the shown backend changes only add new per-market methods and allowlists.",
-      "evidence": [
-        "backend/main.mo"
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "requirement": "Fix backend/frontend actor API mismatch by exposing a public method `_initializeAccessControlWithSecret(adminToken)` (or otherwise make initialization compatible without modifying immutable frontend paths).",
-      "reason": "The diff includes documentation describing the missing method, but the shown backend code does not include an implementation/exposure of `_initializeAccessControlWithSecret`. No other compatibility shim is evidenced in the diff summary.",
-      "evidence": [
-        "backend/main.mo",
-        "frontend/docs/deploy-failure-root-cause.md"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Added a local frontend type system and multiple new/updated UI components and hooks for asset search, market type selection, add holding flow, static asset catalog, and portfolio mocks.",
-      "reason": "Step 2 request focuses on backend verified HTTP outcalls with allowlists and fixing a deploy-breaking actor API mismatch; it explicitly lists UI modernization/design-system changes and broader frontend enhancements as out of scope/non-goals.",
+      "description": "Introduced/changed backend FIAT allowlist entries to unrelated HTTPS endpoints (e.g., exchangeratesapi.io, api.example.com) rather than the requested VPS1 fx_rates.json URL.",
+      "reason": "BuildRequest constrains the FIAT data source to a specific URL; adding different allowlisted FIAT endpoints is not requested and may conflict with the constraint.",
       "evidence": [
-        "frontend/src/types/index.ts",
-        "frontend/src/components/assets/AssetSearch.tsx",
-        "frontend/src/components/assets/MarketTypeSelector.tsx",
-        "frontend/src/components/portfolio/AddHoldingForm.tsx",
-        "frontend/src/components/portfolio/HoldingsList.tsx",
-        "frontend/src/data/assetCatalog.ts",
-        "frontend/src/hooks/useAddHolding.ts",
-        "frontend/src/hooks/usePortfolio.ts",
-        "frontend/src/hooks/useAssetSearch.ts",
-        "frontend/src/pages/AddAssetPage.tsx",
-        "frontend/src/utils/assetSearch.ts",
-        "frontend-file-summaries.txt"
+        "backend/main.mo"
       ]
     },
     {
-      "description": "Added deployment failure analysis and rebuild checklist documentation files.",
-      "reason": "Documentation additions were not requested as part of REQ-6/7/8/9 deliverables.",
+      "description": "Added a new backend-side FiatAssetCacheEntry map/cache structure ('fiatAssetCache') described as 'Migrated Fiat asset cache'.",
+      "reason": "The BuildRequest explicitly states stable migration should not be required and does not request a new backend asset cache structure beyond using the existing cached validation result flow; this additional cache is not requested in REQ-21/REQ-22.",
       "evidence": [
-        "frontend/docs/deploy-failure-root-cause.md",
-        "frontend/docs/rebuild-checklist.md"
+        "backend/main.mo"
       ]
     }
   ],
@@ -62,19 +33,10 @@
   "changed_files": [
     "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/docs/deploy-failure-root-cause.md",
-    "frontend/docs/rebuild-checklist.md",
     "frontend/src/components/assets/AssetSearch.tsx",
-    "frontend/src/components/assets/MarketTypeSelector.tsx",
-    "frontend/src/components/portfolio/AddHoldingForm.tsx",
-    "frontend/src/components/portfolio/HoldingsList.tsx",
-    "frontend/src/data/assetCatalog.ts",
-    "frontend/src/hooks/useAddHolding.ts",
     "frontend/src/hooks/useAssetSearch.ts",
-    "frontend/src/hooks/usePortfolio.ts",
-    "frontend/src/pages/AddAssetPage.tsx",
-    "frontend/src/types/index.ts",
-    "frontend/src/utils/assetSearch.ts",
+    "frontend/src/hooks/useFiatVPS1.ts",
+    "frontend/src/utils/fiatFxRatesParser.ts",
     "project_state.json"
   ]
 }

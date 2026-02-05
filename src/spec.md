@@ -1,12 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Add per-market verified HTTPS fetch methods with a strict allowlist, and fix the backend/frontend actor API mismatch that blocks deployment.
+**Goal:** Show a live, backend-cached list of FIAT currencies in the Add-Asset search when the user selects the Fiat market type.
 
 **Planned changes:**
-- Add four separate backend update methods in `backend/main.mo` to fetch external data for crypto, stocks, fiat, and commodities using the existing `OutCall.httpGetRequest(..., transform)` pattern.
-- Implement a strict, hardcoded HTTPS allowlist so each per-market method can only call its own approved endpoints and traps on non-HTTPS or non-allowlisted URLs.
-- Update or replace the existing `fetchExternalData(url : Text)` so it can no longer fetch arbitrary user-provided URLs and aligns with the allowlist safety model; ensure the backend Candid interface matches the implemented methods.
-- Fix the deploy-breaking actor API mismatch by exposing a backend public method compatible with the frontend call `_initializeAccessControlWithSecret(adminToken)` without changing immutable frontend paths.
+- Update AddAssetPage/AssetSearch flow so selecting the Fiat market type loads FIAT currencies from the backend-cached VPS1 endpoint using the existing backend methods fetchFiatVPS1Data() and getFiatVPS1ValidationResult().
+- Parse the VPS1 `fx_rates.json` response and map each `rates` entry into an Asset (marketType=fiat, ticker=countryCode, name=countryName), replacing the static `fiatCatalog` while valid data is available.
+- Add/extend a frontend data hook backed by React Query to trigger FIAT cache refresh on entering Fiat, store the parsed FIAT Asset list in query cache, and expose loading/error states.
+- Add in-place FIAT results UI states: loading indicator while fetching, clear error/empty message when cached data is null/invalid or fetch fails, plus a retry path (reselect Fiat or an explicit retry control).
 
-**User-visible outcome:** The canister deploys successfully, the frontend actor initializes without runtime errors, and market-category fetch calls work via dedicated methods that only reach allowlisted HTTPS endpoints (no open-proxy behavior).
+**User-visible outcome:** When switching to the Fiat market type in Add-Asset, users see and can search a live list of FIAT currencies (by ticker or name) sourced from the VPS1 `fx_rates.json` cache; loading and error states are shown without affecting other market types.

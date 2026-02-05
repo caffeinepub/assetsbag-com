@@ -2,11 +2,12 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-fix-the-known-deployment-blocking-backend-frontend-actor-api-mismatch-by-ensuring-the-backend-exposes-a-public-method-matching-the-frontend-initialization-call-actor-initializeaccesscontrolwithsecret-admintoken-as-documented-or-otherwise-make-the-backend-initialization-compatible-without-modifying-immutable-frontend-paths-after-the-fix-the-backend-must-deploy-and-the-frontend-actor-must-initialize-without-runtime-errors",
-      "featureTitle": "Fix the known deployment-blocking backend/frontend actor API mismatch by ensuring the backend exposes a public method matching the frontend initialization call `actor._initializeAccessControlWithSecret(adminToken)` (as documented), or otherwise make the backend initialization compatible **without modifying immutable frontend paths**. After the fix, the backend must deploy and the frontend actor must initialize without runtime errors.",
+      "featureId": "feature-when-the-user-selects-the-fiat-market-type-on-addassetpage-load-the-fiat-currencies-list-from-the-backend-cached-vps1-endpoint-via-the-existing-backend-methods-fetchfiatvps1data-getfiatvps1validationresult-and-render-those-currencies-inside-the-existing-add-asset-search-results-list-replacing-the-current-static-fiatcatalog-list-while-data-is-available-parse-the-json-body-returned-from-http-74-208-158-232-fx-rates-json-and-map-each-rates-entry-into-an-asset-object-markettype-fiat-ticker-countrycode-e-g-abw-name-countryname-e-g-aruba-kingdom-of-the-netherlands",
+      "featureTitle": "When the user selects the “Fiat” market type on AddAssetPage, load the FIAT currencies list from the backend-cached VPS1 endpoint (via the existing backend methods fetchFiatVPS1Data() + getFiatVPS1ValidationResult()) and render those currencies inside the existing Add‑Asset search results list (replacing the current static fiatCatalog list while data is available). Parse the JSON body returned from http://74.208.158.232/fx_rates.json and map each rates entry into an Asset object: marketType=fiat, ticker=countryCode (e.g., \"ABW\"), name=countryName (e.g., \"Aruba, Kingdom of the Netherlands\").",
       "files": [
-        "frontend/docs/deploy-failure-root-cause.md",
-        "frontend/docs/rebuild-checklist.md"
+        "frontend/src/components/assets/AssetSearch.tsx",
+        "frontend/src/hooks/useAssetSearch.ts",
+        "frontend/src/utils/fiatFxRatesParser.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -18,7 +19,28 @@
         "http-outcalls@3.0.0"
       ],
       "testIds": [
-        "REQ-9"
+        "REQ-21"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-a-frontend-data-hook-or-extend-existing-hooks-so-that-entering-the-fiat-market-type-automatically-triggers-a-fetch-refresh-of-the-vps1-fiat-cache-by-calling-fetchfiatvps1data-then-reads-getfiatvps1validationresult-and-keeps-the-parsed-fiat-asset-list-in-react-query-cache-for-use-by-assetsearch-ensure-loading-and-error-states-are-handled-in-the-add-asset-search-ui-without-blocking-other-market-types",
+      "featureTitle": "Add a frontend data hook (or extend existing hooks) so that entering the Fiat market type automatically triggers a fetch/refresh of the VPS1 FIAT cache by calling fetchFiatVPS1Data(), then reads getFiatVPS1ValidationResult() and keeps the parsed FIAT Asset list in React Query cache for use by AssetSearch. Ensure loading and error states are handled in the Add‑Asset search UI without blocking other market types.",
+      "files": [
+        "frontend/src/components/assets/AssetSearch.tsx",
+        "frontend/src/hooks/useFiatVPS1.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-22"
       ],
       "confidence": "high"
     }

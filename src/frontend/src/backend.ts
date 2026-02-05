@@ -98,40 +98,74 @@ export interface http_request_result {
     body: Uint8Array;
     headers: Array<http_header>;
 }
+export type HTTPSUrl = string;
 export interface TransformationOutput {
     status: bigint;
     body: Uint8Array;
     headers: Array<http_header>;
 }
+export interface FiatAssetCacheEntry {
+    expired: boolean;
+    assets: Array<Asset>;
+    timestamp: bigint;
+}
 export interface TransformationInput {
     context: Uint8Array;
     response: http_request_result;
 }
+export interface FiatVPS1ValidationResult {
+    validationStatus: Variant_valid_invalid;
+    rawResponseBody: string;
+    isTruncated: boolean;
+    errorMessage?: string;
+    requestedUrl: string;
+    timestamp: bigint;
+}
+export interface Asset {
+    marketType: MarketType;
+    ticker: string;
+    name: string;
+}
 export interface UserProfile {
     name: string;
 }
-export type HTTPSUrl = string;
+export enum MarketType {
+    stocks = "stocks",
+    commodities = "commodities",
+    fiat = "fiat",
+    crypto = "crypto"
+}
 export enum UserRole {
     admin = "admin",
     user = "user",
     guest = "guest"
 }
+export enum Variant_valid_invalid {
+    valid = "valid",
+    invalid = "invalid"
+}
 export interface backendInterface {
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    cacheFiatVPS1Data(cacheId: string, assets: Array<Asset>): Promise<boolean>;
+    expireFiatAssetCacheEntries(cacheIds: Array<string>): Promise<bigint>;
     fetchCommoditiesData(url: HTTPSUrl): Promise<string>;
     fetchCryptoData(url: HTTPSUrl): Promise<string>;
     fetchExternalData(_url: string): Promise<string>;
     fetchFiatData(url: HTTPSUrl): Promise<string>;
+    fetchFiatVPS1Data(): Promise<string>;
     fetchStocksData(url: HTTPSUrl): Promise<string>;
+    getCachedFiatAssets(cacheId: string): Promise<FiatAssetCacheEntry | null>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
+    getFiatCacheMetaData(): Promise<Array<[string, bigint, boolean]>>;
+    getFiatVPS1ValidationResult(): Promise<FiatVPS1ValidationResult | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
 }
-import type { UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
+import type { Asset as _Asset, FiatAssetCacheEntry as _FiatAssetCacheEntry, FiatVPS1ValidationResult as _FiatVPS1ValidationResult, MarketType as _MarketType, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
@@ -159,6 +193,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
+    async cacheFiatVPS1Data(arg0: string, arg1: Array<Asset>): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.cacheFiatVPS1Data(arg0, to_candid_vec_n3(this._uploadFile, this._downloadFile, arg1));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.cacheFiatVPS1Data(arg0, to_candid_vec_n3(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
+    async expireFiatAssetCacheEntries(arg0: Array<string>): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.expireFiatAssetCacheEntries(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.expireFiatAssetCacheEntries(arg0);
             return result;
         }
     }
@@ -218,6 +280,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async fetchFiatVPS1Data(): Promise<string> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.fetchFiatVPS1Data();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.fetchFiatVPS1Data();
+            return result;
+        }
+    }
     async fetchStocksData(arg0: HTTPSUrl): Promise<string> {
         if (this.processError) {
             try {
@@ -232,46 +308,88 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getCachedFiatAssets(arg0: string): Promise<FiatAssetCacheEntry | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCachedFiatAssets(arg0);
+                return from_candid_opt_n8(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCachedFiatAssets(arg0);
+            return from_candid_opt_n8(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async getCallerUserProfile(): Promise<UserProfile | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getCallerUserProfile();
-                return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n16(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getCallerUserProfile();
-            return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n16(this._uploadFile, this._downloadFile, result);
         }
     }
     async getCallerUserRole(): Promise<UserRole> {
         if (this.processError) {
             try {
                 const result = await this.actor.getCallerUserRole();
-                return from_candid_UserRole_n4(this._uploadFile, this._downloadFile, result);
+                return from_candid_UserRole_n17(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getCallerUserRole();
-            return from_candid_UserRole_n4(this._uploadFile, this._downloadFile, result);
+            return from_candid_UserRole_n17(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getFiatCacheMetaData(): Promise<Array<[string, bigint, boolean]>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getFiatCacheMetaData();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getFiatCacheMetaData();
+            return result;
+        }
+    }
+    async getFiatVPS1ValidationResult(): Promise<FiatVPS1ValidationResult | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getFiatVPS1ValidationResult();
+                return from_candid_opt_n19(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getFiatVPS1ValidationResult();
+            return from_candid_opt_n19(this._uploadFile, this._downloadFile, result);
         }
     }
     async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getUserProfile(arg0);
-                return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n16(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getUserProfile(arg0);
-            return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n16(this._uploadFile, this._downloadFile, result);
         }
     }
     async isCallerAdmin(): Promise<boolean> {
@@ -317,13 +435,103 @@ export class Backend implements backendInterface {
         }
     }
 }
-function from_candid_UserRole_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
-    return from_candid_variant_n5(_uploadFile, _downloadFile, value);
+function from_candid_Asset_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Asset): Asset {
+    return from_candid_record_n13(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
+function from_candid_FiatAssetCacheEntry_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _FiatAssetCacheEntry): FiatAssetCacheEntry {
+    return from_candid_record_n10(_uploadFile, _downloadFile, value);
+}
+function from_candid_FiatVPS1ValidationResult_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _FiatVPS1ValidationResult): FiatVPS1ValidationResult {
+    return from_candid_record_n21(_uploadFile, _downloadFile, value);
+}
+function from_candid_MarketType_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _MarketType): MarketType {
+    return from_candid_variant_n15(_uploadFile, _downloadFile, value);
+}
+function from_candid_UserRole_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
+    return from_candid_variant_n18(_uploadFile, _downloadFile, value);
+}
+function from_candid_opt_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_variant_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_opt_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_FiatVPS1ValidationResult]): FiatVPS1ValidationResult | null {
+    return value.length === 0 ? null : from_candid_FiatVPS1ValidationResult_n20(_uploadFile, _downloadFile, value[0]);
+}
+function from_candid_opt_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_FiatAssetCacheEntry]): FiatAssetCacheEntry | null {
+    return value.length === 0 ? null : from_candid_FiatAssetCacheEntry_n9(_uploadFile, _downloadFile, value[0]);
+}
+function from_candid_record_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    expired: boolean;
+    assets: Array<_Asset>;
+    timestamp: bigint;
+}): {
+    expired: boolean;
+    assets: Array<Asset>;
+    timestamp: bigint;
+} {
+    return {
+        expired: value.expired,
+        assets: from_candid_vec_n11(_uploadFile, _downloadFile, value.assets),
+        timestamp: value.timestamp
+    };
+}
+function from_candid_record_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    marketType: _MarketType;
+    ticker: string;
+    name: string;
+}): {
+    marketType: MarketType;
+    ticker: string;
+    name: string;
+} {
+    return {
+        marketType: from_candid_MarketType_n14(_uploadFile, _downloadFile, value.marketType),
+        ticker: value.ticker,
+        name: value.name
+    };
+}
+function from_candid_record_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    validationStatus: {
+        valid: null;
+    } | {
+        invalid: null;
+    };
+    rawResponseBody: string;
+    isTruncated: boolean;
+    errorMessage: [] | [string];
+    requestedUrl: string;
+    timestamp: bigint;
+}): {
+    validationStatus: Variant_valid_invalid;
+    rawResponseBody: string;
+    isTruncated: boolean;
+    errorMessage?: string;
+    requestedUrl: string;
+    timestamp: bigint;
+} {
+    return {
+        validationStatus: from_candid_variant_n22(_uploadFile, _downloadFile, value.validationStatus),
+        rawResponseBody: value.rawResponseBody,
+        isTruncated: value.isTruncated,
+        errorMessage: record_opt_to_undefined(from_candid_opt_n23(_uploadFile, _downloadFile, value.errorMessage)),
+        requestedUrl: value.requestedUrl,
+        timestamp: value.timestamp
+    };
+}
+function from_candid_variant_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    stocks: null;
+} | {
+    commodities: null;
+} | {
+    fiat: null;
+} | {
+    crypto: null;
+}): MarketType {
+    return "stocks" in value ? MarketType.stocks : "commodities" in value ? MarketType.commodities : "fiat" in value ? MarketType.fiat : "crypto" in value ? MarketType.crypto : value;
+}
+function from_candid_variant_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     admin: null;
 } | {
     user: null;
@@ -332,8 +540,39 @@ function from_candid_variant_n5(_uploadFile: (file: ExternalBlob) => Promise<Uin
 }): UserRole {
     return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
 }
+function from_candid_variant_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    valid: null;
+} | {
+    invalid: null;
+}): Variant_valid_invalid {
+    return "valid" in value ? Variant_valid_invalid.valid : "invalid" in value ? Variant_valid_invalid.invalid : value;
+}
+function from_candid_vec_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Asset>): Array<Asset> {
+    return value.map((x)=>from_candid_Asset_n12(_uploadFile, _downloadFile, x));
+}
+function to_candid_Asset_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Asset): _Asset {
+    return to_candid_record_n5(_uploadFile, _downloadFile, value);
+}
+function to_candid_MarketType_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: MarketType): _MarketType {
+    return to_candid_variant_n7(_uploadFile, _downloadFile, value);
+}
 function to_candid_UserRole_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n2(_uploadFile, _downloadFile, value);
+}
+function to_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    marketType: MarketType;
+    ticker: string;
+    name: string;
+}): {
+    marketType: _MarketType;
+    ticker: string;
+    name: string;
+} {
+    return {
+        marketType: to_candid_MarketType_n6(_uploadFile, _downloadFile, value.marketType),
+        ticker: value.ticker,
+        name: value.name
+    };
 }
 function to_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): {
     admin: null;
@@ -349,6 +588,28 @@ function to_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8
     } : value == UserRole.guest ? {
         guest: null
     } : value;
+}
+function to_candid_variant_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: MarketType): {
+    stocks: null;
+} | {
+    commodities: null;
+} | {
+    fiat: null;
+} | {
+    crypto: null;
+} {
+    return value == MarketType.stocks ? {
+        stocks: null
+    } : value == MarketType.commodities ? {
+        commodities: null
+    } : value == MarketType.fiat ? {
+        fiat: null
+    } : value == MarketType.crypto ? {
+        crypto: null
+    } : value;
+}
+function to_candid_vec_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<Asset>): Array<_Asset> {
+    return value.map((x)=>to_candid_Asset_n4(_uploadFile, _downloadFile, x));
 }
 export interface CreateActorOptions {
     agent?: Agent;

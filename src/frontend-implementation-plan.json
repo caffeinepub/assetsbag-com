@@ -1,31 +1,54 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Step 2 (Frontend-only): Align frontend actor typing + verification docs for access-control init method",
+  "title": "Show live FIAT currencies in Add-Asset search using backend-cached fx_rates.json",
   "requirements": [
     {
-      "id": "REQ-9",
-      "summary": "Ensure the frontend remains compatible with the backend initialization API by keeping the immutable initialization call intact while aligning generated frontend actor typings and documenting the required backend public method contract.",
+      "id": "REQ-21",
+      "summary": "Render FIAT Add-Asset search results from the backend-cached VPS1 fx_rates.json validation response (replacing the static fiat catalog while valid data is available) and map rates into Asset objects.",
       "acceptanceCriteria": [
-        "Backend deploy succeeds (no init-time failure).",
-        "Frontend actor initialization no longer throws due to missing `_initializeAccessControlWithSecret`.",
-        "No changes are made to immutable frontend paths (including `frontend/src/hooks/useActor.ts`)."
+        "Selecting MarketType.fiat in AddAssetPage shows FIAT search results sourced from the VPS1 fx_rates.json response (not only the hardcoded frontend fiat list) when backend validationStatus is #valid.",
+        "FIAT assets are searchable by both ticker (countryCode) and name (countryName) using the existing search input in AssetSearch.",
+        "The mapping is correct: rates[\"ABW\"].countryCode => Asset.ticker \"ABW\" and rates[\"ABW\"].countryName => Asset.name \"Aruba, Kingdom of the Netherlands\".",
+        "If the backend has no cached FIAT result yet (null) or the cached result is invalid, the UI does not crash and provides a clear in-place empty/error message in the FIAT results area (in English)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/backend.d.ts",
-          "operation": "modify",
-          "description": "Update the frontend backend-interface TypeScript declarations to include the initialization method required by the immutable call site: `actor._initializeAccessControlWithSecret(adminToken) : Promise<void>`. Keep the signature consistent with the backend’s public API after the backend-side fix so TypeScript matches runtime behavior."
+          "path": "frontend/src/utils/fiatFxRatesParser.ts",
+          "operation": "create",
+          "description": "Add a small parser that converts the JSON string returned in FiatVPS1ValidationResult.rawResponseBody from http://74.208.158.232/fx_rates.json into an array of frontend Asset objects: marketType=MarketType.fiat, ticker=rates[*].countryCode, name=rates[*].countryName. Include defensive parsing (missing keys, unexpected shapes) and surface parse errors to callers."
         },
         {
-          "path": "frontend/docs/deploy-failure-root-cause.md",
+          "path": "frontend/src/hooks/useAssetSearch.ts",
           "operation": "modify",
-          "description": "Update the analysis and verification guidance to reflect the required compatibility contract: the backend must publicly expose a method matching the immutable frontend call `actor._initializeAccessControlWithSecret(adminToken)`. Include a checklist item to confirm the method appears in the generated frontend declarations and no runtime error occurs during actor initialization."
+          "description": "Extend the asset-search hook to support an optional asset-source override for the current market type (used for FIAT) so FIAT results can come from the parsed VPS1 list when available while preserving existing static catalog behavior for other market types."
         },
         {
-          "path": "frontend/docs/rebuild-checklist.md",
+          "path": "frontend/src/components/assets/AssetSearch.tsx",
           "operation": "modify",
-          "description": "Complete/expand the rebuild checklist to include the mandatory regeneration and verification steps after backend interface changes, specifically checking that `_initializeAccessControlWithSecret` is present in the generated frontend declarations and that the authenticated actor initialization path runs without errors."
+          "description": "Update the Add-Asset search UI to use the VPS1-derived FIAT Asset list when MarketType.fiat is selected and backend validation is valid; otherwise gracefully fall back to the static fiat catalog (or show an in-place FIAT message when no valid data exists). Ensure search filtering still matches ticker and name via the existing search utility."
+        }
+      ]
+    },
+    {
+      "id": "REQ-22",
+      "summary": "Add/extend a React Query hook so switching to FIAT triggers fetchFiatVPS1Data(), reads getFiatVPS1ValidationResult(), caches parsed FIAT assets, and exposes loading/error/retry states without affecting other market types.",
+      "acceptanceCriteria": [
+        "Switching to Fiat market type triggers a fetch (unless there is already a recent valid cached result and the implementation chooses not to refetch immediately).",
+        "While FIAT data is being fetched, the FIAT search area shows a loading indicator/message (English) instead of an empty list.",
+        "If the fetch fails, an error message is shown and the user can retry by re-selecting Fiat or via an explicit retry control implemented in the FIAT search area.",
+        "Switching to other market types (Crypto/Stocks/Commodities) continues to use the existing static catalog behavior and is unaffected by FIAT fetch failures."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useFiatVPS1.ts",
+          "operation": "modify",
+          "description": "Extend existing FIAT VPS1 hooks to provide a single React Query-powered hook that (when enabled for FIAT selection) triggers actor.fetchFiatVPS1Data(), then reads actor.getFiatVPS1ValidationResult(), parses rawResponseBody into an Asset[] (using the new parser), and stores the parsed list in React Query cache. Expose a stable API for AssetSearch: assets, validationStatus-derived state, isLoading, error, and a retry/refetch control."
+        },
+        {
+          "path": "frontend/src/components/assets/AssetSearch.tsx",
+          "operation": "modify",
+          "description": "Wire the FIAT-specific data hook into the FIAT results area: show an English loading message while the FIAT fetch/parse/validation flow is in progress; show an English error/invalid/no-data message when needed; and include an explicit retry control in the FIAT results area that triggers the hook refetch. Ensure other market types continue using the existing static catalog path and are not blocked by FIAT loading/errors."
         }
       ]
     }
