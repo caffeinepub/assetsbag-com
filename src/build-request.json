@@ -1,72 +1,92 @@
 {
   "kind": "build_request",
-  "title": "Start Step 1: Minimal multi-endpoint market-data fetcher scaffold + deploy fix",
-  "priority": "high",
+  "title": "Step 2: Add per-market verified HTTP fetch methods with strict allowlist + fix deploy-breaking actor API mismatch",
+  "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-3",
-      "text": "Perform a clean rebuild (frontend + backend) and identify the exact cause of the canister deployment failure, capturing the precise failing step and error details (e.g., Motoko compile error, missing import/module, Candid/interface mismatch, wasm size/limit).",
+      "id": "REQ-6",
+      "text": "In `backend/main.mo`, add four dedicated **backend update methods** to fetch external market data by category—one each for **crypto**, **stocks**, **fiat**, and **commodities**—implemented as separate functions (not a single generic fetch). Each method must perform verified HTTPS outcalls using the existing `OutCall.httpGetRequest(..., transform)` pattern and return the raw response text (or a structured error via trap) for now.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "recent-4",
+          "recent-8"
+        ],
+        "quotes": [
+          "please proceed with Step 2: Add individual endpoint fetch functions (crypto, stocks, fiat, commodities) with safe verified HTTP calls.",
+          "build please"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend compiles with four separate update methods for crypto/stocks/fiat/commodities external fetches.",
+        "Each method uses `OutCall.httpGetRequest(url, [], transform)` and the existing `transform` query method.",
+        "Each method is callable via Candid and returns the fetched response body as `Text`."
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "text": "Implement a strict, hardcoded **HTTPS allowlist** for outbound requests used by the new per-market fetch methods. The backend must reject (trap) any URL that is not explicitly allowlisted, including any non-HTTPS URL. The allowlist may be maintained as one list per market type or a single allowlist keyed by market type, but the per-market methods must only be able to call their own allowlisted endpoints.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "recent-4"
+        ],
+        "quotes": [
+          "Add individual endpoint fetch functions (crypto, stocks, fiat, commodities) with safe verified HTTP calls."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Calling a per-market fetch method with a URL not on the allowlist traps with a clear error message.",
+        "Calling a per-market fetch method with a non-HTTPS URL traps with a clear error message.",
+        "Only the hardcoded allowlisted URLs are reachable; the canister cannot be used as an arbitrary open proxy."
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "text": "Update or replace the existing `fetchExternalData(url : Text)` backend method so it is no longer a general-purpose arbitrary-URL fetch for normal users. Align it with the same allowlist safety model (e.g., remove it, restrict it to admins, or route it through the same allowlist verification), and ensure the backend Candid interface matches the implemented methods to prevent deploy/interface mismatches.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "recent-4"
+        ],
+        "quotes": [
+          "Add individual endpoint fetch functions (crypto, stocks, fiat, commodities) with safe verified HTTP calls."
+        ]
+      },
+      "acceptanceCriteria": [
+        "`fetchExternalData` can no longer successfully fetch arbitrary user-provided URLs.",
+        "If `fetchExternalData` remains available, it enforces the same HTTPS + allowlist checks (or is admin-only).",
+        "The deployed backend Candid interface includes only the intended public methods and matches the implementation."
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "text": "Fix the known deployment-blocking backend/frontend actor API mismatch by ensuring the backend exposes a public method matching the frontend initialization call `actor._initializeAccessControlWithSecret(adminToken)` (as documented), or otherwise make the backend initialization compatible **without modifying immutable frontend paths**. After the fix, the backend must deploy and the frontend actor must initialize without runtime errors.",
       "target": "both",
       "source": {
         "messageIds": [
-          "msg-1"
+          "recent-6"
         ],
         "quotes": [
-          "looks good please start"
+          "yes please investigate the issue and try one more time"
         ]
       },
       "acceptanceCriteria": [
-        "A single, concrete root cause is documented (not a hypothesis), including the file and symbol/line area implicated when applicable",
-        "The project builds successfully locally in the build pipeline after the fix in REQ-4 is applied",
-        "If the failure is due to Candid mismatch, the generated frontend declarations align with the backend interface after rebuild"
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Implement Step 1 of the multi-endpoint integration plan in the backend by adding a clean, minimal fetcher structure that supports multiple external market-data HTTP endpoints, without implementing dataset merging, stable caching, background refresh loops, or last-good fallback logic yet.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "looks good please start"
-        ]
-      },
-      "acceptanceCriteria": [
-        "All Motoko changes remain within the single actor in backend/main.mo (no new backend services)",
-        "The backend compiles and the canister deploys successfully after this step",
-        "There is a clear internal abstraction for multiple endpoints (e.g., an endpoint registry/list + per-endpoint fetch function signatures) even if only minimal responses are returned",
-        "No stable cache or timer-based refresh is introduced in this step"
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Expose a minimal backend public API suitable for validating Step 1 at runtime: a method to trigger fetching from a selected endpoint and return a small, typed result (or a typed error) so endpoint connectivity/response parsing can be verified independently before any merging/caching is added.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "looks good please start"
-        ]
-      },
-      "acceptanceCriteria": [
-        "A frontend-independent call path exists to fetch a single endpoint (by an explicit selector/variant) and return a result that can be inspected",
-        "Errors are handled deterministically (no traps for routine HTTP/parse failures) and returned in a structured way",
-        "The method is authorized appropriately (consistent with existing access control patterns) or explicitly documented as non-sensitive if left public"
+        "Backend deploy succeeds (no init-time failure).",
+        "Frontend actor initialization no longer throws due to missing `_initializeAccessControlWithSecret`.",
+        "No changes are made to immutable frontend paths (including `frontend/src/hooks/useActor.ts`)."
       ]
     }
   ],
   "constraints": [
-    "Respect single-actor backend architecture: keep all Motoko logic in backend/main.mo.",
-    "Do not introduce unsupported backend technologies or external databases/services beyond verified HTTP calls.",
-    "Do not edit frontend immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui."
+    "Keep all Motoko logic in the single actor at `backend/main.mo` (no additional backend services).",
+    "Do not modify any paths listed in `frontend.immutablePaths` (must resolve compatibility via backend/public API or non-immutable frontend files only).",
+    "Outbound HTTP requests must be verified HTTP outcalls and restricted to a hardcoded HTTPS allowlist; do not introduce any open-proxy capability."
   ],
   "nonGoals": [
-    "Do not implement Step 2+ (individual endpoint implementations per market, merging, stable caching, 2-minute background refresh, last-good fallback, FX/base-currency handling) in this build request.",
-    "Do not add or change dashboard analytics, allocation charts, or UI modernization in this step unless required to fix a Candid/build break."
+    "UI modernization/design-system changes across the app (out of scope for this Step 2 build).",
+    "Adding base currency selection, conversion logic, or dashboard analytics enhancements (not part of Step 2).",
+    "Introducing external databases, third-party auth providers, websockets, or additional backend canisters."
   ],
   "imageRequirements": {
     "required": [],

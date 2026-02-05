@@ -1,7 +1,4 @@
 import Map "mo:core/Map";
-import Array "mo:core/Array";
-import Order "mo:core/Order";
-import Iter "mo:core/Iter";
 import Text "mo:core/Text";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
@@ -37,12 +34,6 @@ actor {
     name : Text;
   };
 
-  module Asset {
-    public func compare(a1 : Asset, a2 : Asset) : Order.Order {
-      Text.compare(a1.ticker, a2.ticker);
-    };
-  };
-
   let assets = Map.fromIter<Text, Asset>(
     [
       ("AAPL", { marketType = #stocks; ticker = "AAPL"; name = "Apple Inc." }),
@@ -57,6 +48,93 @@ actor {
 
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
+
+  type HTTPSUrl = Text;
+
+  module CryptoAllowlist {
+    let allowlist : [HTTPSUrl] = [
+      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd",
+      "https://api.coincap.io/v2/assets",
+    ];
+    public func isAllowlisted(url : HTTPSUrl) : Bool {
+      allowlist.find(func(x) { x == url }) != null;
+    };
+  };
+  module StocksAllowlist {
+    let allowlist : [HTTPSUrl] = [
+      "https://api.marketstack.com/v1/eod?access_key=YOUR_API_KEY&symbols=AAPL,GOOGL,TSLA",
+      "https://api.example.com/stocks/prices",
+    ];
+    public func isAllowlisted(url : HTTPSUrl) : Bool {
+      allowlist.find(func(x) { x == url }) != null;
+    };
+  };
+  module FiatsAllowlist {
+    let allowlist : [HTTPSUrl] = [
+      "https://api.exchangeratesapi.io/latest?base=USD",
+      "https://api.example.com/fiat/rates",
+    ];
+    public func isAllowlisted(url : HTTPSUrl) : Bool {
+      allowlist.find(func(x) { x == url }) != null;
+    };
+  };
+  module CommoditiesAllowlist {
+    let allowlist : [HTTPSUrl] = [
+      "https://api.example.com/commodities/prices",
+      "https://api.example.com/commodities/metal_prices",
+    ];
+    public func isAllowlisted(url : HTTPSUrl) : Bool {
+      allowlist.find(func(x) { x == url }) != null;
+    };
+  };
+
+  public shared ({ caller }) func fetchCryptoData(url : HTTPSUrl) : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can fetch crypto data");
+    };
+    if (not (CryptoAllowlist.isAllowlisted(url))) {
+      Runtime.trap("Error: Not an allowlisted HTTPS Crypto endpoint");
+    };
+    await OutCall.httpGetRequest(url, [], transform);
+  };
+
+  public shared ({ caller }) func fetchStocksData(url : HTTPSUrl) : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can fetch stocks data");
+    };
+    if (not (StocksAllowlist.isAllowlisted(url))) {
+      Runtime.trap("Error: Not an allowlisted HTTPS Stocks endpoint");
+    };
+    await OutCall.httpGetRequest(url, [], transform);
+  };
+
+  public shared ({ caller }) func fetchFiatData(url : HTTPSUrl) : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can fetch fiat data");
+    };
+    if (not (FiatsAllowlist.isAllowlisted(url))) {
+      Runtime.trap("Error: Not an allowlisted HTTPS Fiat endpoint");
+    };
+    await OutCall.httpGetRequest(url, [], transform);
+  };
+
+  public shared ({ caller }) func fetchCommoditiesData(url : HTTPSUrl) : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can fetch commodities data");
+    };
+    if (not (CommoditiesAllowlist.isAllowlisted(url))) {
+      Runtime.trap("Error: Not an allowlisted HTTPS Commodities endpoint");
+    };
+    await OutCall.httpGetRequest(url, [], transform);
+  };
+
+  public shared ({ caller }) func fetchExternalData(_url : Text) : async Text {
+    Runtime.trap("updateFunctionRemovedFromBackend: Function was unsafe and has been removed. Use one of the dedicated fetch functions instead: fetchCryptoData, fetchStocksData, fetchFiatData, fetchCommoditiesData");
+  };
+
+  public query func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
+    OutCall.transform(input);
+  };
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
@@ -77,61 +155,5 @@ actor {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
     userProfiles.add(caller, profile);
-  };
-
-  public query ({ caller }) func getPortfolio() : async Portfolio {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only registered users can view portfolios");
-    };
-
-    switch (portfolios.get(caller)) {
-      case (null) { { holdings = [] } };
-      case (?portfolio) { portfolio };
-    };
-  };
-
-  public shared ({ caller }) func addHolding(holding : Holding) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only registered users can add assets");
-    };
-
-    let current = switch (portfolios.get(caller)) {
-      case (null) { { holdings = [] } };
-      case (?port) { port };
-    };
-    let newHoldings = current.holdings.concat([holding]);
-    portfolios.add(caller, { holdings = newHoldings });
-  };
-
-  public query ({ caller }) func searchAssets(searchTerm : Text, marketType : MarketType) : async [Asset] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only registered users can search assets");
-    };
-
-    let term = searchTerm.toLower();
-    let iter = assets.values();
-
-    let filteredIter = iter.filter(
-      func(asset) {
-        (asset.marketType == marketType)
-        and (
-          asset.ticker.toLower().contains(#text term) or
-          asset.name.toLower().contains(#text term)
-        );
-      }
-    );
-
-    filteredIter.toArray();
-  };
-
-  public query func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
-    OutCall.transform(input);
-  };
-
-  public shared ({ caller }) func fetchExternalData(url : Text) : async Text {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only registered users can fetch external data");
-    };
-    await OutCall.httpGetRequest(url, [], transform);
   };
 };

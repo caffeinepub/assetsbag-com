@@ -2,8 +2,8 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-perform-a-clean-rebuild-frontend-backend-and-identify-the-exact-cause-of-the-canister-deployment-failure-capturing-the-precise-failing-step-and-error-details-e-g-motoko-compile-error-missing-import-module-candid-interface-mismatch-wasm-size-limit",
-      "featureTitle": "Perform a clean rebuild (frontend + backend) and identify the exact cause of the canister deployment failure, capturing the precise failing step and error details (e.g., Motoko compile error, missing import/module, Candid/interface mismatch, wasm size/limit).",
+      "featureId": "feature-fix-the-known-deployment-blocking-backend-frontend-actor-api-mismatch-by-ensuring-the-backend-exposes-a-public-method-matching-the-frontend-initialization-call-actor-initializeaccesscontrolwithsecret-admintoken-as-documented-or-otherwise-make-the-backend-initialization-compatible-without-modifying-immutable-frontend-paths-after-the-fix-the-backend-must-deploy-and-the-frontend-actor-must-initialize-without-runtime-errors",
+      "featureTitle": "Fix the known deployment-blocking backend/frontend actor API mismatch by ensuring the backend exposes a public method matching the frontend initialization call `actor._initializeAccessControlWithSecret(adminToken)` (as documented), or otherwise make the backend initialization compatible **without modifying immutable frontend paths**. After the fix, the backend must deploy and the frontend actor must initialize without runtime errors.",
       "files": [
         "frontend/docs/deploy-failure-root-cause.md",
         "frontend/docs/rebuild-checklist.md"
@@ -18,7 +18,7 @@
         "http-outcalls@3.0.0"
       ],
       "testIds": [
-        "REQ-3"
+        "REQ-9"
       ],
       "confidence": "high"
     }

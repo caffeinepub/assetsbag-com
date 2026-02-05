@@ -1,4 +1,4 @@
-import type { Asset } from '@/backend';
+import type { Asset } from '@/types';
 
 /**
  * Search assets by ticker or name (case-insensitive)

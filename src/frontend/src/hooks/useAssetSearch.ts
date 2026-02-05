@@ -1,15 +1,11 @@
 import { useMemo } from 'react';
-import { MarketType, type Asset } from '@/backend';
+import { MarketType, type Asset } from '@/types';
 import { assetCatalog } from '@/data/assetCatalog';
 import { searchAssets } from '@/utils/assetSearch';
 
 export function useAssetSearch(searchTerm: string, marketType: MarketType): Asset[] {
   return useMemo(() => {
-    if (!searchTerm.trim()) {
-      return [];
-    }
-    
-    const catalogForMarket = assetCatalog[marketType] || [];
-    return searchAssets(catalogForMarket, searchTerm);
+    const assets = assetCatalog[marketType];
+    return searchAssets(assets, searchTerm);
   }, [searchTerm, marketType]);
 }

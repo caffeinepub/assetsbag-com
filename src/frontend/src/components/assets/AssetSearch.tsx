@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
-import { MarketType, type Asset } from '@/backend';
+import { MarketType, type Asset } from '@/types';
 import { useAssetSearch } from '@/hooks/useAssetSearch';
 
 interface AssetSearchProps {

@@ -10,21 +10,7 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
-export interface Asset {
-  'marketType' : MarketType,
-  'ticker' : string,
-  'name' : string,
-}
-export interface Holding {
-  'purchasePrice' : number,
-  'asset' : Asset,
-  'amount' : number,
-}
-export type MarketType = { 'stocks' : null } |
-  { 'commodities' : null } |
-  { 'fiat' : null } |
-  { 'crypto' : null };
-export interface Portfolio { 'holdings' : Array<Holding> }
+export type HTTPSUrl = string;
 export interface TransformationInput {
   'context' : Uint8Array,
   'response' : http_request_result,
@@ -46,16 +32,17 @@ export interface http_request_result {
 }
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
-  'addHolding' : ActorMethod<[Holding], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'fetchCommoditiesData' : ActorMethod<[HTTPSUrl], string>,
+  'fetchCryptoData' : ActorMethod<[HTTPSUrl], string>,
   'fetchExternalData' : ActorMethod<[string], string>,
+  'fetchFiatData' : ActorMethod<[HTTPSUrl], string>,
+  'fetchStocksData' : ActorMethod<[HTTPSUrl], string>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
-  'getPortfolio' : ActorMethod<[], Portfolio>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
-  'searchAssets' : ActorMethod<[string, MarketType], Array<Asset>>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
 }
 export declare const idlService: IDL.ServiceClass;

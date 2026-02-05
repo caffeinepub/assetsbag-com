@@ -1,51 +1,56 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T00:24:45.313Z",
+  "generatedAt": "2026-02-05T00:50:07.273Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 3,
+    "total": 4,
     "implemented": 1,
     "items": [
       {
-        "id": "REQ-3",
-        "summary": "Perform a clean rebuild (frontend + backend) and identify the exact cause of the canister deployment failure, capturing the precise failing step and error details (e.g., Motoko compile error, missing import/module, Candid/interface mismatch, wasm size/limit).",
+        "id": "REQ-6",
+        "summary": "In `backend/main.mo`, add four dedicated **backend update methods** to fetch external market data by category—one each for **crypto**, **stocks**, **fiat**, and **commodities**—implemented as separate functions (not a single generic fetch). Each method must perform verified HTTPS outcalls using the existing `OutCall.httpGetRequest(..., transform)` pattern and return the raw response text (or a structured error via trap) for now.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-7",
+        "summary": "Implement a strict, hardcoded **HTTPS allowlist** for outbound requests used by the new per-market fetch methods. The backend must reject (trap) any URL that is not explicitly allowlisted, including any non-HTTPS URL. The allowlist may be maintained as one list per market type or a single allowlist keyed by market type, but the per-market methods must only be able to call their own allowlisted endpoints.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-8",
+        "summary": "Update or replace the existing `fetchExternalData(url : Text)` backend method so it is no longer a general-purpose arbitrary-URL fetch for normal users. Align it with the same allowlist safety model (e.g., remove it, restrict it to admins, or route it through the same allowlist verification), and ensure the backend Candid interface matches the implemented methods to prevent deploy/interface mismatches.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-9",
+        "summary": "Fix the known deployment-blocking backend/frontend actor API mismatch by ensuring the backend exposes a public method matching the frontend initialization call `actor._initializeAccessControlWithSecret(adminToken)` (as documented), or otherwise make the backend initialization compatible **without modifying immutable frontend paths**. After the fix, the backend must deploy and the frontend actor must initialize without runtime errors.",
         "status": "implemented",
         "plannedFiles": [
+          "frontend/src/backend.d.ts",
           "frontend/docs/deploy-failure-root-cause.md",
-          "frontend/docs/rebuild-checklist.md",
-          "frontend/src/backend.d.ts"
+          "frontend/docs/rebuild-checklist.md"
         ],
         "matchedFiles": [
+          "frontend/src/backend.d.ts",
           "frontend/docs/deploy-failure-root-cause.md",
-          "frontend/docs/rebuild-checklist.md",
-          "frontend/src/backend.d.ts"
+          "frontend/docs/rebuild-checklist.md"
         ]
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Implement Step 1 of the multi-endpoint integration plan in the backend by adding a clean, minimal fetcher structure that supports multiple external market-data HTTP endpoints, without implementing dataset merging, stable caching, background refresh loops, or last-good fallback logic yet.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-5",
-        "summary": "Expose a minimal backend public API suitable for validating Step 1 at runtime: a method to trigger fetching from a selected endpoint and return a small, typed result (or a typed error) so endpoint connectivity/response parsing can be verified independently before any merging/caching is added.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
       }
     ]
   },
   "changedFiles": [
-    "backend/http-outcalls/outcall.mo",
     "backend/main.mo",
     "build-request.json",
-    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
@@ -53,8 +58,19 @@
     "frontend/docs/rebuild-checklist.md",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
+    "frontend/src/components/assets/AssetSearch.tsx",
+    "frontend/src/components/assets/MarketTypeSelector.tsx",
+    "frontend/src/components/portfolio/AddHoldingForm.tsx",
+    "frontend/src/components/portfolio/HoldingsList.tsx",
+    "frontend/src/data/assetCatalog.ts",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useAddHolding.ts",
+    "frontend/src/hooks/useAssetSearch.ts",
+    "frontend/src/hooks/usePortfolio.ts",
+    "frontend/src/pages/AddAssetPage.tsx",
+    "frontend/src/types/index.ts",
+    "frontend/src/utils/assetSearch.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

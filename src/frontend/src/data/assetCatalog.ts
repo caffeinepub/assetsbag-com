@@ -1,4 +1,4 @@
-import { MarketType, type Asset } from '@/backend';
+import { MarketType, type Asset } from '@/types';
 
 /**
  * Static asset catalog for demonstration purposes.

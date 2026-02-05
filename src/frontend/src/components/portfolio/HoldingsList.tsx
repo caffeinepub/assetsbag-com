@@ -1,6 +1,6 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import type { Holding, MarketType } from '@/backend';
+import type { Holding, MarketType } from '@/types';
 
 interface HoldingsListProps {
   holdings: Holding[];

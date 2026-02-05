@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import type { Asset } from '@/backend';
+import type { Asset } from '@/types';
 
 interface AddHoldingFormProps {
   asset: Asset;

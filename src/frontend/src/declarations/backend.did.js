@@ -8,29 +8,13 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
-export const MarketType = IDL.Variant({
-  'stocks' : IDL.Null,
-  'commodities' : IDL.Null,
-  'fiat' : IDL.Null,
-  'crypto' : IDL.Null,
-});
-export const Asset = IDL.Record({
-  'marketType' : MarketType,
-  'ticker' : IDL.Text,
-  'name' : IDL.Text,
-});
-export const Holding = IDL.Record({
-  'purchasePrice' : IDL.Float64,
-  'asset' : Asset,
-  'amount' : IDL.Float64,
-});
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const HTTPSUrl = IDL.Text;
 export const UserProfile = IDL.Record({ 'name' : IDL.Text });
-export const Portfolio = IDL.Record({ 'holdings' : IDL.Vec(Holding) });
 export const http_header = IDL.Record({
   'value' : IDL.Text,
   'name' : IDL.Text,
@@ -52,12 +36,14 @@ export const TransformationOutput = IDL.Record({
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
-  'addHolding' : IDL.Func([Holding], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'fetchCommoditiesData' : IDL.Func([HTTPSUrl], [IDL.Text], []),
+  'fetchCryptoData' : IDL.Func([HTTPSUrl], [IDL.Text], []),
   'fetchExternalData' : IDL.Func([IDL.Text], [IDL.Text], []),
+  'fetchFiatData' : IDL.Func([HTTPSUrl], [IDL.Text], []),
+  'fetchStocksData' : IDL.Func([HTTPSUrl], [IDL.Text], []),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-  'getPortfolio' : IDL.Func([], [Portfolio], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -65,11 +51,6 @@ export const idlService = IDL.Service({
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
-  'searchAssets' : IDL.Func(
-      [IDL.Text, MarketType],
-      [IDL.Vec(Asset)],
-      ['query'],
-    ),
   'transform' : IDL.Func(
       [TransformationInput],
       [TransformationOutput],
@@ -80,29 +61,13 @@ export const idlService = IDL.Service({
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
-  const MarketType = IDL.Variant({
-    'stocks' : IDL.Null,
-    'commodities' : IDL.Null,
-    'fiat' : IDL.Null,
-    'crypto' : IDL.Null,
-  });
-  const Asset = IDL.Record({
-    'marketType' : MarketType,
-    'ticker' : IDL.Text,
-    'name' : IDL.Text,
-  });
-  const Holding = IDL.Record({
-    'purchasePrice' : IDL.Float64,
-    'asset' : Asset,
-    'amount' : IDL.Float64,
-  });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
+  const HTTPSUrl = IDL.Text;
   const UserProfile = IDL.Record({ 'name' : IDL.Text });
-  const Portfolio = IDL.Record({ 'holdings' : IDL.Vec(Holding) });
   const http_header = IDL.Record({ 'value' : IDL.Text, 'name' : IDL.Text });
   const http_request_result = IDL.Record({
     'status' : IDL.Nat,
@@ -121,12 +86,14 @@ export const idlFactory = ({ IDL }) => {
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
-    'addHolding' : IDL.Func([Holding], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'fetchCommoditiesData' : IDL.Func([HTTPSUrl], [IDL.Text], []),
+    'fetchCryptoData' : IDL.Func([HTTPSUrl], [IDL.Text], []),
     'fetchExternalData' : IDL.Func([IDL.Text], [IDL.Text], []),
+    'fetchFiatData' : IDL.Func([HTTPSUrl], [IDL.Text], []),
+    'fetchStocksData' : IDL.Func([HTTPSUrl], [IDL.Text], []),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-    'getPortfolio' : IDL.Func([], [Portfolio], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
@@ -134,11 +101,6 @@ export const idlFactory = ({ IDL }) => {
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
-    'searchAssets' : IDL.Func(
-        [IDL.Text, MarketType],
-        [IDL.Vec(Asset)],
-        ['query'],
-      ),
     'transform' : IDL.Func(
         [TransformationInput],
         [TransformationOutput],

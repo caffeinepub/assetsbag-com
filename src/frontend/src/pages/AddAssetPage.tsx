@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import MarketTypeSelector from '@/components/assets/MarketTypeSelector';
 import AssetSearch from '@/components/assets/AssetSearch';
 import AddHoldingForm from '@/components/portfolio/AddHoldingForm';
-import { MarketType, type Asset } from '@/backend';
+import { MarketType, type Asset } from '@/types';
 import { ArrowLeft } from 'lucide-react';
 
 export default function AddAssetPage() {
