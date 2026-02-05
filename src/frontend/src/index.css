@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --radius: 0.75rem;
+        
+        /* Light mode - Modern financial theme with teal/cyan accent */
+        --background: 0.99 0 0;
+        --foreground: 0.12 0 0;
+        
+        --card: 1 0 0;
+        --card-foreground: 0.12 0 0;
+        
+        --popover: 1 0 0;
+        --popover-foreground: 0.12 0 0;
+        
+        /* Teal/cyan primary for modern financial look */
+        --primary: 0.58 0.16 195;
+        --primary-foreground: 0.99 0 0;
+        
+        --secondary: 0.95 0.01 240;
+        --secondary-foreground: 0.12 0 0;
+        
+        --muted: 0.95 0.01 240;
+        --muted-foreground: 0.48 0.01 240;
+        
+        --accent: 0.94 0.02 195;
+        --accent-foreground: 0.12 0 0;
+        
+        --destructive: 0.58 0.24 27;
+        --destructive-foreground: 0.99 0 0;
+        
+        --border: 0.88 0.01 240;
+        --input: 0.88 0.01 240;
+        --ring: 0.58 0.16 195;
+        
+        --chart-1: 0.58 0.16 195;
+        --chart-2: 0.62 0.18 220;
+        --chart-3: 0.60 0.14 170;
+        --chart-4: 0.68 0.20 280;
+        --chart-5: 0.64 0.22 150;
+    }
+
+    .dark {
+        --background: 0.10 0.01 240;
+        --foreground: 0.96 0.01 240;
+        
+        --card: 0.14 0.01 240;
+        --card-foreground: 0.96 0.01 240;
+        
+        --popover: 0.14 0.01 240;
+        --popover-foreground: 0.96 0.01 240;
+        
+        /* Brighter teal/cyan for dark mode */
+        --primary: 0.68 0.18 195;
+        --primary-foreground: 0.10 0.01 240;
+        
+        --secondary: 0.18 0.02 240;
+        --secondary-foreground: 0.96 0.01 240;
+        
+        --muted: 0.18 0.02 240;
+        --muted-foreground: 0.58 0.02 240;
+        
+        --accent: 0.22 0.03 195;
+        --accent-foreground: 0.96 0.01 240;
+        
+        --destructive: 0.62 0.22 27;
+        --destructive-foreground: 0.96 0.01 240;
+        
+        --border: 0.22 0.02 240;
+        --input: 0.22 0.02 240;
+        --ring: 0.68 0.18 195;
+        
+        --chart-1: 0.68 0.18 195;
+        --chart-2: 0.72 0.20 220;
+        --chart-3: 0.70 0.16 170;
+        --chart-4: 0.75 0.22 280;
+        --chart-5: 0.72 0.24 150;
+    }
+
+    * {
+        @apply border-border;
+    }
+    
+    body {
+        @apply bg-background text-foreground;
+        font-feature-settings: "rlig" 1, "calt" 1;
+    }
+}

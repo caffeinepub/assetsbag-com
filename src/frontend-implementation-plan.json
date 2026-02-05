@@ -1,0 +1,33 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Step 1 scaffold support: frontend rebuild diagnostics + declaration alignment",
+  "requirements": [
+    {
+      "id": "REQ-3",
+      "summary": "Document the exact canister deployment failure root cause and align frontend build/declarations after the backend fix is applied.",
+      "acceptanceCriteria": [
+        "A single, concrete root cause is documented (not a hypothesis), including the file and symbol/line area implicated when applicable",
+        "The project builds successfully locally in the build pipeline after the fix in REQ-4 is applied",
+        "If the failure is due to Candid mismatch, the generated frontend declarations align with the backend interface after rebuild"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/docs/deploy-failure-root-cause.md",
+          "operation": "create",
+          "description": "Create a build/deploy incident note capturing the exact failing step and full error output from a clean rebuild/deploy attempt, plus the confirmed single root cause (including implicated file and symbol/line when applicable) and the verification steps after the REQ-4 backend fix is applied."
+        },
+        {
+          "path": "frontend/docs/rebuild-checklist.md",
+          "operation": "create",
+          "description": "Add a short, repeatable clean-rebuild checklist focused on frontend + generated declarations alignment (e.g., when to regenerate declarations and what to verify in the UI build) so future Candid/interface mismatches are caught and resolved during rebuild."
+        },
+        {
+          "path": "frontend/src/backend.d.ts",
+          "operation": "modify",
+          "description": "If the deployment failure is caused by a Candid/interface mismatch, update the frontend backend type declarations to match the rebuilt backend interface (including any newly added/changed public methods/types) and ensure TypeScript compilation succeeds."
+        }
+      ]
+    }
+  ]
+}

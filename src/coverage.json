@@ -1,0 +1,63 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-05T00:24:45.313Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 3,
+    "implemented": 1,
+    "items": [
+      {
+        "id": "REQ-3",
+        "summary": "Perform a clean rebuild (frontend + backend) and identify the exact cause of the canister deployment failure, capturing the precise failing step and error details (e.g., Motoko compile error, missing import/module, Candid/interface mismatch, wasm size/limit).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/docs/deploy-failure-root-cause.md",
+          "frontend/docs/rebuild-checklist.md",
+          "frontend/src/backend.d.ts"
+        ],
+        "matchedFiles": [
+          "frontend/docs/deploy-failure-root-cause.md",
+          "frontend/docs/rebuild-checklist.md",
+          "frontend/src/backend.d.ts"
+        ]
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Implement Step 1 of the multi-endpoint integration plan in the backend by adding a clean, minimal fetcher structure that supports multiple external market-data HTTP endpoints, without implementing dataset merging, stable caching, background refresh loops, or last-good fallback logic yet.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Expose a minimal backend public API suitable for validating Step 1 at runtime: a method to trigger fetching from a selected endpoint and return a small, typed result (or a typed error) so endpoint connectivity/response parsing can be verified independently before any merging/caching is added.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      }
+    ]
+  },
+  "changedFiles": [
+    "backend/http-outcalls/outcall.mo",
+    "backend/main.mo",
+    "build-request.json",
+    "caffeine.lock.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/docs/deploy-failure-root-cause.md",
+    "frontend/docs/rebuild-checklist.md",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

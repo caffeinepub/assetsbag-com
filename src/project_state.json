@@ -1,0 +1,271 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 40,
+  "summary": "Build AssetsBag.com, an ICP portfolio tracker with real market data for crypto, stocks, commodities, and fiat using verified HTTP endpoints; the canister auto-refreshes and caches merged datasets every 2 minutes, supports base-currency conversion, and powers enhanced dashboard analytics (value, P/L, allocation chart).",
+  "existing_features": [
+    {
+      "id": "IF-1",
+      "title": "Internet Identity login gate and authenticated app shell",
+      "synonyms": [
+        "AuthGate",
+        "Internet Identity auth"
+      ],
+      "description": "Frontend implements an authentication gate using Internet Identity; unauthenticated users see a login prompt and authenticated users can access the app shell and pages.",
+      "reqIds": [
+        "AR-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-2",
+      "title": "Initial dashboard with empty-state “Add First Asset” call-to-action",
+      "synonyms": [
+        "DashboardPage",
+        "Holdings empty state"
+      ],
+      "description": "Dashboard shows user holdings list; when portfolio is empty it displays a clear CTA to add the first asset and routes user into the add-asset flow.",
+      "reqIds": [
+        "AR-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-3",
+      "title": "Add Asset flow with market type selection",
+      "synonyms": [
+        "AddAssetPage",
+        "MarketTypeSelector"
+      ],
+      "description": "Add Asset page allows selecting a market type (Crypto/Stocks/Commodities/Fiat) and proceeds to search/select an asset for adding to the portfolio.",
+      "reqIds": [
+        "AR-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-4",
+      "title": "Asset search with live filtering by ticker or name",
+      "synonyms": [
+        "AssetSearch",
+        "useAssetSearch"
+      ],
+      "description": "Implements live, type-ahead filtering over an asset catalog; search matches both ticker and asset name (e.g., AAPL or Apple).",
+      "reqIds": [
+        "AR-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-5",
+      "title": "Add holding form (quantity required; purchase price/date optional)",
+      "synonyms": [
+        "AddHoldingForm",
+        "useAddHolding"
+      ],
+      "description": "Form enforces quantity as required; purchase price optional; purchase date optional with default to today; on save, the holding is added to the user’s portfolio.",
+      "reqIds": [
+        "AR-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-6",
+      "title": "Per-user portfolio storage and retrieval (holdings list)",
+      "synonyms": [
+        "usePortfolio",
+        "HoldingsList"
+      ],
+      "description": "User portfolios start empty and holdings are stored and loaded per authenticated user; dashboard lists holdings (no charts/allocation breakdown).",
+      "reqIds": [
+        "AR-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-7",
+      "title": "Price refresh cadence placeholder (2-minute target)",
+      "synonyms": [
+        "usePriceRefreshPlaceholder"
+      ],
+      "description": "Frontend includes a placeholder mechanism aligned to a 2-minute refresh cadence target, ready to be wired to a real market-data fetcher later.",
+      "reqIds": [
+        "AR-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-8",
+      "title": "Backend authorization and access control scaffolding",
+      "synonyms": [
+        "Motoko authorization mixin",
+        "access-control.mo"
+      ],
+      "description": "Backend includes authorization/access-control modules to support authenticated user-scoped operations.",
+      "reqIds": [
+        "AR-2",
+        "AR-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-9",
+      "title": "Global light/dark theming with system preference + manual override toggle",
+      "synonyms": [
+        "ThemeProvider",
+        "ThemeToggle",
+        "dark mode",
+        "light mode"
+      ],
+      "description": "App includes a global theming system supporting light and dark themes. Theme can follow system preference by default, with a manual toggle to override; the manual override takes precedence across the app.",
+      "reqIds": [
+        "AR-8",
+        "AR-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-10",
+      "title": "User profile setup dialog/scaffolding",
+      "synonyms": [
+        "ProfileSetupDialog",
+        "useCurrentUserProfile"
+      ],
+      "description": "Frontend includes profile setup dialog and user-profile hook/scaffolding to manage basic per-user profile state during onboarding/authenticated use.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-11",
+      "title": "Pre-login landing/login homepage separated from post-login dashboard",
+      "synonyms": [
+        "LandingPage",
+        "UnauthenticatedHome",
+        "LoginLanding"
+      ],
+      "description": "Unauthenticated users now see a dedicated pre-login landing/login screen; authenticated users are routed directly to the app dashboard/shell without duplicating marketing/landing content.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-12",
+      "title": "Backend market-data fetcher with verified HTTP endpoints + merged asset cache",
+      "synonyms": [
+        "http-outcalls",
+        "asset cache",
+        "market data integration"
+      ],
+      "description": "Backend integrates the fixed, verified HTTP endpoints for crypto (4 workers), stocks (4 workers), fiat, and commodities; crypto & stocks are merged across all 4 endpoints and sorted by marketCap DESC; fiat & commodities preserve endpoint order. Result is stored as a unified cached dataset for frontend search/add-asset flows.",
+      "reqIds": [
+        "AR-9",
+        "AR-13"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-13",
+      "title": "Automated 2-minute canister background refresh with last-good-cache fallback",
+      "synonyms": [
+        "background refresh",
+        "polling scheduler",
+        "cache timestamp"
+      ],
+      "description": "Canister runs fully automated background updates on a ~2-minute cadence: fetch all endpoints, rebuild merged cache, persist with timestamp; if any endpoint fails, the canister keeps the last known-good cache and logs silently without user-facing errors.",
+      "reqIds": [
+        "AR-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-perform-a-clean-rebuild-frontend-backend-and-identify-the-exact-cause-of-the-canister-deployment-failure-capturing-the-precise-failing-step-and-error-details-e-g-motoko-compile-error-missing-import-module-candid-interface-mismatch-wasm-size-limit",
+      "title": "Perform a clean rebuild (frontend + backend) and identify the exact cause of the canister deployment failure, capturing the precise failing step and error details (e.g., Motoko compile error, missing import/module, Candid/interface mismatch, wasm size/limit).",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-6",
+      "summary": "Modernize UI styling across the app (clean, modern design system).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "Add base currency support: USD default plus user-selectable fiat dropdown with instant conversion using cached FX rates (rateUSD semantics).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Enhance dashboard: total portfolio value, total P/L (color-coded), allocation pie chart by market type, expanded holdings table ([Logo] Asset | Market | Qty | Current Price | Value | P/L | % Portfolio), plus footer with last-updated timestamp and base currency selector.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-13",
+      "summary": "Enforce search ordering and display rules: crypto & stocks sorted by marketCap DESC; fiat & commodities preserve endpoint order; show results as [Logo(if available)] Symbol • Name • Market Type; match by ticker or name.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-14",
+      "summary": "Perform a clean rebuild of the full project (frontend + backend) and identify the exact cause of the canister deployment failure (e.g., Motoko compile error, missing module/import, candid/interface mismatch, wasm size/limits) related to the new multi-VPS data-pipeline integration.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-15",
+      "summary": "Adjust the multi-VPS data-pipeline integration implementation so that the backend canister compiles and deploys successfully under the platform constraints (single Motoko actor in backend/main.mo, no unsupported external services, and within canister limits).",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-16",
+      "summary": "Break the multi-VPS data-pipeline integration into smaller implementation steps and apply/validate them one-by-one to simplify integration and deployment troubleshooting.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-18",
+      "summary": "Implement Step 1 of the multi-endpoint integration plan in the backend by adding a clean, minimal fetcher structure that supports multiple external market-data HTTP endpoints, without implementing dataset merging, stable caching, background refresh loops, or last-good fallback logic yet.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-19",
+      "summary": "Expose a minimal backend public API suitable for validating Step 1 at runtime: a method to trigger fetching from a selected endpoint and return a small, typed result (or a typed error) so endpoint connectivity/response parsing can be verified independently before any merging/caching is added.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "status": "pending"
+    }
+  ],
+  "architectural_notes": [
+    "Target price refresh cadence: every 2 minutes (implement as configurable polling schedule when fetcher exists).",
+    "Add-asset form fields: quantity required; purchase price optional; purchase date optional (defaults to today); on save, add holding to user portfolio.",
+    "User portfolios start empty; store holdings per-user (no initial seeded holdings).",
+    "Authentication uses Internet Identity; portfolio operations are scoped per authenticated user principal.",
+    "Introduce a global theming system (light/dark) to ensure consistent styling across all pages/components.",
+    "UI modernization scope is homepage-only for now (other screens deferred).",
+    "Theming: support both system-preference auto theme and a manual light/dark toggle (manual override takes precedence).",
+    "Market-data providers/endpoints are now fixed: crypto workers http://74.208.158.232/crypto_worker_0.json, http://87.106.37.86/crypto_worker_1.json, http://87.106.143.214/crypto_worker_2.json, http://217.160.21.18/crypto_worker_3.json; stocks workers http://74.208.158.232/stocks.json, http://87.106.37.86/stocks.json, http://87.106.143.214/stocks.json, http://217.160.21.18/stocks.json; fiat http://74.208.158.232/fx_rates.json; commodities http://74.208.158.232/commodities.json.",
+    "Crypto & stocks datasets must be merged across all 4 endpoints and sorted by marketCap descending to drive UI search; fiat & commodities are not sorted (use natural endpoint order).",
+    "Canister runs fully automated background updates every 2 minutes: fetch all endpoints, rebuild cache, store with timestamp; no manual refresh."
+  ],
+  "known_issues": [
+    "Deployment failed during canister deploy after code generation (likely Motoko compile error or canister constraint/size issue); needs clean rebuild and inspection of multi-VPS data-pipeline integration."
+  ],
+  "isFixRequest": true,
+  "gameProjectType": "none",
+  "projectName": "AssetsBag.com",
+  "clarification_mode": "pro",
+  "clarification_rounds": 0
+}
