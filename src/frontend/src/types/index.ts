@@ -15,6 +15,10 @@ export interface Asset {
   marketType: MarketType;
   ticker: string;
   name: string;
+  // Optional fields for stocks and crypto
+  marketCap?: number;
+  lastPrice?: number;
+  logoUrl?: string;
 }
 
 export interface Holding {

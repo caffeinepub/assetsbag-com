@@ -39,7 +39,7 @@ export default function FiatTestPage() {
         <CardHeader>
           <CardTitle>Fetch FIAT Data</CardTitle>
           <CardDescription>
-            Endpoint: http://74.208.158.232/fx_rates.json
+            Endpoint: https://api.assetsbag.com/fx_rates.json
           </CardDescription>
         </CardHeader>
         <CardContent>

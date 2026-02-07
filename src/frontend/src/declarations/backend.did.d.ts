@@ -15,6 +15,15 @@ export interface Asset {
   'ticker' : string,
   'name' : string,
 }
+export interface CommoditiesVPS1ValidationResult {
+  'validationStatus' : { 'valid' : null } |
+    { 'invalid' : null },
+  'rawResponseBody' : string,
+  'isTruncated' : boolean,
+  'errorMessage' : [] | [string],
+  'requestedUrl' : string,
+  'timestamp' : bigint,
+}
 export interface FiatAssetCacheEntry {
   'expired' : boolean,
   'assets' : Array<Asset>,
@@ -34,6 +43,24 @@ export type MarketType = { 'stocks' : null } |
   { 'commodities' : null } |
   { 'fiat' : null } |
   { 'crypto' : null };
+export interface StocksVPS1RawValidationResult {
+  'validationStatus' : { 'valid' : null } |
+    { 'invalid' : null },
+  'rawResponseBody' : string,
+  'isTruncated' : boolean,
+  'errorMessage' : [] | [string],
+  'requestedUrl' : string,
+  'timestamp' : bigint,
+}
+export interface StocksVPS1ValidationResult {
+  'validationStatus' : { 'valid' : null } |
+    { 'invalid' : null },
+  'rawResponseBody' : string,
+  'isTruncated' : boolean,
+  'errorMessage' : [] | [string],
+  'requestedUrl' : string,
+  'timestamp' : bigint,
+}
 export interface TransformationInput {
   'context' : Uint8Array,
   'response' : http_request_result,
@@ -59,18 +86,33 @@ export interface _SERVICE {
   'cacheFiatVPS1Data' : ActorMethod<[string, Array<Asset>], boolean>,
   'expireFiatAssetCacheEntries' : ActorMethod<[Array<string>], bigint>,
   'fetchCommoditiesData' : ActorMethod<[HTTPSUrl], string>,
+  'fetchCommoditiesVPS1Data' : ActorMethod<[], string>,
   'fetchCryptoData' : ActorMethod<[HTTPSUrl], string>,
   'fetchExternalData' : ActorMethod<[string], string>,
   'fetchFiatData' : ActorMethod<[HTTPSUrl], string>,
   'fetchFiatVPS1Data' : ActorMethod<[], string>,
   'fetchStocksData' : ActorMethod<[HTTPSUrl], string>,
+  'fetchStocksVPS1Chunk' : ActorMethod<[bigint, bigint], undefined>,
+  'fetchStocksVPS1Raw' : ActorMethod<[bigint], undefined>,
+  'getAllStocksValidationResults' : ActorMethod<
+    [],
+    Array<[string, StocksVPS1ValidationResult]>
+  >,
   'getCachedFiatAssets' : ActorMethod<[string], [] | [FiatAssetCacheEntry]>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getCommoditiesVPS1ValidationResult' : ActorMethod<
+    [],
+    [] | [CommoditiesVPS1ValidationResult]
+  >,
   'getFiatCacheMetaData' : ActorMethod<[], Array<[string, bigint, boolean]>>,
   'getFiatVPS1ValidationResult' : ActorMethod<
     [],
     [] | [FiatVPS1ValidationResult]
+  >,
+  'getStocksVPS1RawValidationResult' : ActorMethod<
+    [],
+    [] | [StocksVPS1RawValidationResult]
   >,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,

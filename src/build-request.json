@@ -1,62 +1,69 @@
 {
   "kind": "build_request",
-  "title": "Show live FIAT currencies in Add-Asset search using fx_rates.json cache",
+  "title": "Fetch Worker0 stocks.json in backend and use it for Stocks asset search (no merge/sort/batching)",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-21",
-      "text": "When the user selects the “Fiat” market type on AddAssetPage, load the FIAT currencies list from the backend-cached VPS1 endpoint (via the existing backend methods fetchFiatVPS1Data() + getFiatVPS1ValidationResult()) and render those currencies inside the existing Add‑Asset search results list (replacing the current static fiatCatalog list while data is available). Parse the JSON body returned from http://74.208.158.232/fx_rates.json and map each rates entry into an Asset object: marketType=fiat, ticker=countryCode (e.g., \"ABW\"), name=countryName (e.g., \"Aruba, Kingdom of the Netherlands\").",
-      "target": "both",
+      "id": "REQ-1",
+      "text": "Implement a backend canister flow to fetch Worker 0 stocks JSON from `api.assetsbag.com/stocks.json` in a single HTTP outcall (no batching/chunking), then store the returned JSON response body as-is for later inspection/use (same overall fetch→validate→store pattern used for FIAT/Commodities).",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-6",
-          "msg-7"
+          "recent-10",
+          "recent-12",
+          "recent-14",
+          "recent-16",
+          "recent-19"
         ],
         "quotes": [
-          "yes under Add‑Asset search list i want to see real list fetched from http://74.208.158.232/fx_rates.json",
-          "build"
+          "just try to fetch all assets ~4000 from the endpoint Worker\n0 only (api.assetsbag.com/stocks.json) . please do not do this in bathes try to do it at once",
+          "lets try this time in backend canister.",
+          "store them the same way as fiat and commodities",
+          "as for now do not complicate",
+          "sorry don't do MERGE  and SORT BY"
         ]
       },
       "acceptanceCriteria": [
-        "Selecting MarketType.fiat in AddAssetPage shows FIAT search results sourced from the VPS1 fx_rates.json response (not only the hardcoded frontend fiat list) when backend validationStatus is #valid.",
-        "FIAT assets are searchable by both ticker (countryCode) and name (countryName) using the existing search input in AssetSearch.",
-        "The mapping is correct: rates[\"ABW\"].countryCode => Asset.ticker \"ABW\" and rates[\"ABW\"].countryName => Asset.name \"Aruba, Kingdom of the Netherlands\".",
-        "If the backend has no cached FIAT result yet (null) or the cached result is invalid, the UI does not crash and provides a clear in-place empty/error message in the FIAT results area (in English)."
+        "Backend exposes a permission-gated update method that fetches the Worker0 stocks endpoint in a single request and stores the raw response body without transforming/merging/sorting.",
+        "Backend stores a latest validation/inspection record for this Worker0 stocks fetch, including at least: requestedUrl, timestamp, rawResponseBody, validationStatus (valid/invalid), errorMessage, and whether the body was truncated.",
+        "Backend exposes a permission-gated query method to read the latest stored Worker0 stocks validation/inspection record without triggering a new HTTP outcall.",
+        "The implementation does not use the existing 16-chunk/64-call stocks chunk pipeline for this Worker0-only fetch."
       ]
     },
     {
-      "id": "REQ-22",
-      "text": "Add a frontend data hook (or extend existing hooks) so that entering the Fiat market type automatically triggers a fetch/refresh of the VPS1 FIAT cache by calling fetchFiatVPS1Data(), then reads getFiatVPS1ValidationResult() and keeps the parsed FIAT Asset list in React Query cache for use by AssetSearch. Ensure loading and error states are handled in the Add‑Asset search UI without blocking other market types.",
+      "id": "REQ-2",
+      "text": "Update the frontend Stocks market data path used by the Add-Asset search so it uses the new backend Worker0 stocks fetch/store/inspect flow (single endpoint only), and ensure the UI does not perform or describe any merge or marketCap-based sorting for stocks.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-6",
-          "msg-7"
+          "recent-10",
+          "recent-19"
         ],
         "quotes": [
-          "i don't see list of fiat currencies appears. what we should do to make it happen?",
-          "build"
+          "just try to fetch all assets ~4000 from the endpoint Worker\n0 only (api.assetsbag.com/stocks.json) . please do not do this in bathes try to do it at once",
+          "sorry don't do MERGE  and SORT BY"
         ]
       },
       "acceptanceCriteria": [
-        "Switching to Fiat market type triggers a fetch (unless there is already a recent valid cached result and the implementation chooses not to refetch immediately).",
-        "While FIAT data is being fetched, the FIAT search area shows a loading indicator/message (English) instead of an empty list.",
-        "If the fetch fails, an error message is shown and the user can retry by re-selecting Fiat or via an explicit retry control implemented in the FIAT search area.",
-        "Switching to other market types (Crypto/Stocks/Commodities) continues to use the existing static catalog behavior and is unaffected by FIAT fetch failures."
+        "When MarketType is Stocks, the frontend triggers the Worker0-only backend fetch (single endpoint) and then reads the stored result for parsing into searchable stock assets.",
+        "The Stocks loading UI copy no longer references merging 4 VPS endpoints and no longer implies chunked fetching.",
+        "Frontend does not merge multiple stocks sources and does not sort stock results by marketCap as part of this Worker0-only fetch path."
       ]
     }
   ],
   "constraints": [
-    "Do not edit files under frontend/src/components/ui (Shadcn components are read-only).",
-    "Do not edit immutable frontend hook paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx.",
-    "Keep backend logic within the single Motoko actor at backend/main.mo; only add migration.mo if a stable-state change is required (this request should not require stable migration).",
-    "Preserve the exact endpoint URL for FIAT data: http://74.208.158.232/fx_rates.json."
+    "Backend must remain a single Motoko actor in `backend/main.mo` (no additional backend services).",
+    "Do not implement batching/chunking for the Worker0 stocks.json fetch; perform a single-request fetch.",
+    "Do not implement merging across multiple stock endpoints.",
+    "Do not implement sorting by marketCap for the stocks dataset as part of this change.",
+    "Use English for any user-facing text.",
+    "Do not edit files under `frontend/src/components/ui` or other immutable frontend paths listed in SYSTEM_CONTEXT."
   ],
   "nonGoals": [
-    "Implementing base-currency conversion across the dashboard and holdings.",
-    "Adding crypto/stocks/commodities live catalogs or changing their ordering rules.",
-    "Changing access-control roles/permissions beyond what is required for FIAT list visibility in Add-Asset.",
-    "Building new UI pages beyond wiring the FIAT list into the existing Add-Asset search."
+    "Implementing long-running (5–10 minute) canister execution; only the single HTTP fetch attempt and normal canister execution limits apply.",
+    "Adding background refresh scheduling for stocks.",
+    "Changing FIAT or Commodities fetching behavior.",
+    "Adding a new backend merge/sort pipeline for stocks beyond storing the Worker0 response as-is."
   ],
   "imageRequirements": {
     "required": [],

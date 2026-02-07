@@ -1,54 +1,51 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Show live FIAT currencies in Add-Asset search using backend-cached fx_rates.json",
+  "title": "Use Worker0-only stocks.json backend fetch/store flow for Add-Asset stock search (no merge/sort/chunking)",
   "requirements": [
     {
-      "id": "REQ-21",
-      "summary": "Render FIAT Add-Asset search results from the backend-cached VPS1 fx_rates.json validation response (replacing the static fiat catalog while valid data is available) and map rates into Asset objects.",
+      "id": "REQ-2",
+      "summary": "Switch Add-Asset Stocks search to Worker0-only backend fetch+inspect flow and remove any merge/chunk/sort-by-marketCap behavior and copy.",
       "acceptanceCriteria": [
-        "Selecting MarketType.fiat in AddAssetPage shows FIAT search results sourced from the VPS1 fx_rates.json response (not only the hardcoded frontend fiat list) when backend validationStatus is #valid.",
-        "FIAT assets are searchable by both ticker (countryCode) and name (countryName) using the existing search input in AssetSearch.",
-        "The mapping is correct: rates[\"ABW\"].countryCode => Asset.ticker \"ABW\" and rates[\"ABW\"].countryName => Asset.name \"Aruba, Kingdom of the Netherlands\".",
-        "If the backend has no cached FIAT result yet (null) or the cached result is invalid, the UI does not crash and provides a clear in-place empty/error message in the FIAT results area (in English)."
+        "When MarketType is Stocks, the frontend triggers the Worker0-only backend fetch (single endpoint) and then reads the stored result for parsing into searchable stock assets.",
+        "The Stocks loading UI copy no longer references merging 4 VPS endpoints and no longer implies chunked fetching.",
+        "Frontend does not merge multiple stocks sources and does not sort stock results by marketCap as part of this Worker0-only fetch path."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/fiatFxRatesParser.ts",
+          "path": "frontend/src/hooks/useStocksWorker0.ts",
           "operation": "create",
-          "description": "Add a small parser that converts the JSON string returned in FiatVPS1ValidationResult.rawResponseBody from http://74.208.158.232/fx_rates.json into an array of frontend Asset objects: marketType=MarketType.fiat, ticker=rates[*].countryCode, name=rates[*].countryName. Include defensive parsing (missing keys, unexpected shapes) and surface parse errors to callers."
+          "description": "Add a dedicated React Query hook for Stocks that (1) calls the new Worker0-only backend fetch/store update method, then (2) reads the latest stored validation/inspection record via the new backend query method, and (3) parses the returned rawResponseBody into Asset[] for searching (no merging across sources)."
+        },
+        {
+          "path": "frontend/src/utils/stocksWorker0Parser.ts",
+          "operation": "create",
+          "description": "Implement a defensive parser that converts the Worker0 stocks rawResponseBody JSON into Asset[] for MarketType.stocks without applying marketCap-based sorting and without assuming/performing merges."
+        },
+        {
+          "path": "frontend/src/components/assets/AssetSearch.tsx",
+          "operation": "modify",
+          "description": "Replace useStocksMergedAssets usage with the new useStocksWorker0 hook for MarketType.stocks, and update the stocks loading/error UI copy to reference a single stocks data source (remove any mention of merging 4 VPS endpoints or chunked fetching)."
         },
         {
           "path": "frontend/src/hooks/useAssetSearch.ts",
           "operation": "modify",
-          "description": "Extend the asset-search hook to support an optional asset-source override for the current market type (used for FIAT) so FIAT results can come from the parsed VPS1 list when available while preserving existing static catalog behavior for other market types."
+          "description": "Remove marketCap-based sorting for MarketType.stocks in the search results path (keep existing behavior for other market types as-is, e.g., crypto if desired)."
         },
         {
-          "path": "frontend/src/components/assets/AssetSearch.tsx",
+          "path": "frontend/src/utils/stocksParser.ts",
           "operation": "modify",
-          "description": "Update the Add-Asset search UI to use the VPS1-derived FIAT Asset list when MarketType.fiat is selected and backend validation is valid; otherwise gracefully fall back to the static fiat catalog (or show an in-place FIAT message when no valid data exists). Ensure search filtering still matches ticker and name via the existing search utility."
-        }
-      ]
-    },
-    {
-      "id": "REQ-22",
-      "summary": "Add/extend a React Query hook so switching to FIAT triggers fetchFiatVPS1Data(), reads getFiatVPS1ValidationResult(), caches parsed FIAT assets, and exposes loading/error/retry states without affecting other market types.",
-      "acceptanceCriteria": [
-        "Switching to Fiat market type triggers a fetch (unless there is already a recent valid cached result and the implementation chooses not to refetch immediately).",
-        "While FIAT data is being fetched, the FIAT search area shows a loading indicator/message (English) instead of an empty list.",
-        "If the fetch fails, an error message is shown and the user can retry by re-selecting Fiat or via an explicit retry control implemented in the FIAT search area.",
-        "Switching to other market types (Crypto/Stocks/Commodities) continues to use the existing static catalog behavior and is unaffected by FIAT fetch failures."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useFiatVPS1.ts",
-          "operation": "modify",
-          "description": "Extend existing FIAT VPS1 hooks to provide a single React Query-powered hook that (when enabled for FIAT selection) triggers actor.fetchFiatVPS1Data(), then reads actor.getFiatVPS1ValidationResult(), parses rawResponseBody into an Asset[] (using the new parser), and stores the parsed list in React Query cache. Expose a stable API for AssetSearch: assets, validationStatus-derived state, isLoading, error, and a retry/refetch control."
+          "description": "Remove the marketCap-descending sort step so this utility no longer sorts stocks by marketCap (ensuring no accidental sorting remains if this parser is still used anywhere)."
         },
         {
-          "path": "frontend/src/components/assets/AssetSearch.tsx",
+          "path": "frontend/src/hooks/useStocksMerged.ts",
           "operation": "modify",
-          "description": "Wire the FIAT-specific data hook into the FIAT results area: show an English loading message while the FIAT fetch/parse/validation flow is in progress; show an English error/invalid/no-data message when needed; and include an explicit retry control in the FIAT results area that triggers the hook refetch. Ensure other market types continue using the existing static catalog path and are not blocked by FIAT loading/errors."
+          "description": "Decouple Add-Asset search from the legacy 64-call merged/chunk stocks path by marking this hook as legacy/internal (or otherwise preventing it from being used by AssetSearch going forward), without introducing any new merge/chunk behavior."
+        },
+        {
+          "path": "frontend/src/backend.d.ts",
+          "operation": "modify",
+          "description": "Update frontend backend interface typings to match the new Worker0-only stocks fetch/store/inspect methods and the returned validation/inspection record type so the new hook can call the backend without type errors."
         }
       ]
     }

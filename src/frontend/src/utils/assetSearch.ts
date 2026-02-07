@@ -2,12 +2,14 @@ import type { Asset } from '@/types';
 
 /**
  * Search assets by ticker or name (case-insensitive)
+ * Returns full list if searchTerm is empty (for focus-driven display)
  */
 export function searchAssets(assets: Asset[], searchTerm: string): Asset[] {
   const term = searchTerm.toLowerCase().trim();
   
+  // Return full list when no search term (for focus-driven display)
   if (!term) {
-    return [];
+    return assets;
   }
 
   return assets.filter((asset) => {

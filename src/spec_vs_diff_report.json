@@ -1,42 +1,52 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T02:13:29.246Z",
-  "summary": "Frontend implements a FIAT VPS1 parsing + React Query hook and wires it into AssetSearch with loading/error/retry states and a fallback to the static catalog. However, the diff does not show the required fixed FIAT endpoint URL (http://74.208.158.232/fx_rates.json) being used/allowlisted on the backend; the only visible FIAT allowlist entries are different HTTPS URLs.",
+  "generatedAt": "2026-02-05T19:13:36.306Z",
+  "summary": "Frontend adds a new Worker0-only stocks hook/parser and wires AssetSearch to use it, and removes marketCap-based sorting for stocks. Backend shows new types/storage fields for a raw Worker0 validation record and still contains legacy multi-endpoint/chunk URL constants, but the diff summary does not include concrete evidence of the required permission-gated fetch/query methods or the single-outcall fetch/store implementation.",
   "missing_requirements": [
     {
-      "id": "REQ-21",
-      "requirement": "Preserve and use the exact FIAT data endpoint URL: http://74.208.158.232/fx_rates.json (backend-cached VPS1 endpoint used by fetchFiatVPS1Data/getFiatVPS1ValidationResult).",
-      "reason": "In the visible backend changes, the FIAT allowlist does not include the required URL and instead lists unrelated endpoints; the required http://74.208.158.232/fx_rates.json is not present in the diff summary, so it is not evidenced that the backend fetch/cache is pointed at the mandated endpoint.",
+      "id": "REQ-1",
+      "requirement": "Backend exposes a permission-gated update method that fetches `api.assetsbag.com/stocks.json` in a single HTTP outcall (no batching/chunking) and stores the raw response body as-is, plus a permission-gated query method to read the latest stored validation/inspection record (requestedUrl, timestamp, rawResponseBody, validationStatus, errorMessage, isTruncated), without using the existing 16-chunk/64-call pipeline.",
+      "reason": "Although backend types and a `stocksRawVPS1ValidationResult` variable are shown, the diff summary is truncated and does not show the actual update/query method implementations, permission checks, or the outcall logic demonstrating a single-request fetch and storage of the inspection record.",
       "evidence": [
-        "backend/main.mo"
+        "backend/main.mo (truncated)"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "requirement": "Stocks loading UI copy no longer references merging 4 VPS endpoints and no longer implies chunked fetching.",
+      "reason": "AssetSearch.tsx is truncated before the Stocks-specific loading/error UI text is visible, so the diff summary does not provide evidence that the user-facing copy was updated for the Stocks path.",
+      "evidence": [
+        "frontend/src/components/assets/AssetSearch.tsx (truncated)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Introduced/changed backend FIAT allowlist entries to unrelated HTTPS endpoints (e.g., exchangeratesapi.io, api.example.com) rather than the requested VPS1 fx_rates.json URL.",
-      "reason": "BuildRequest constrains the FIAT data source to a specific URL; adding different allowlisted FIAT endpoints is not requested and may conflict with the constraint.",
+      "description": "Added marketCap-based sorting for Crypto assets in `useAssetSearch` (sort applied when marketType === crypto).",
+      "reason": "The BuildRequest only required removing marketCap-based sorting for Stocks; it did not request adding or changing sorting behavior for Crypto.",
       "evidence": [
-        "backend/main.mo"
+        "frontend/src/hooks/useAssetSearch.ts"
       ]
     },
     {
-      "description": "Added a new backend-side FiatAssetCacheEntry map/cache structure ('fiatAssetCache') described as 'Migrated Fiat asset cache'.",
-      "reason": "The BuildRequest explicitly states stable migration should not be required and does not request a new backend asset cache structure beyond using the existing cached validation result flow; this additional cache is not requested in REQ-21/REQ-22.",
+      "description": "Added a debugging/inspection React hook `useGetStocksWorker0ValidationResult` for directly querying the raw Worker0 validation result.",
+      "reason": "The BuildRequest focused on updating Add-Asset search to use the new backend flow; it did not explicitly request an additional frontend debug/inspection hook.",
       "evidence": [
-        "backend/main.mo"
+        "frontend/src/hooks/useStocksWorker0.ts"
       ]
     }
   ],
-  "confidence": 0.64,
+  "confidence": 0.58,
   "changed_files": [
     "backend/main.mo",
     "frontend-file-summaries.txt",
     "frontend/src/components/assets/AssetSearch.tsx",
     "frontend/src/hooks/useAssetSearch.ts",
-    "frontend/src/hooks/useFiatVPS1.ts",
-    "frontend/src/utils/fiatFxRatesParser.ts",
+    "frontend/src/hooks/useStocksMerged.ts",
+    "frontend/src/hooks/useStocksWorker0.ts",
+    "frontend/src/utils/stocksParser.ts",
+    "frontend/src/utils/stocksWorker0Parser.ts",
     "project_state.json"
   ]
 }

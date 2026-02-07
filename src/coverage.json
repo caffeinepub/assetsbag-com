@@ -1,41 +1,43 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T02:13:29.284Z",
+  "generatedAt": "2026-02-05T19:13:36.309Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
     "total": 2,
-    "implemented": 2,
+    "implemented": 1,
     "items": [
       {
-        "id": "REQ-21",
-        "summary": "When the user selects the “Fiat” market type on AddAssetPage, load the FIAT currencies list from the backend-cached VPS1 endpoint (via the existing backend methods fetchFiatVPS1Data() + getFiatVPS1ValidationResult()) and render those currencies inside the existing Add‑Asset search results list (replacing the current static fiatCatalog list while data is available). Parse the JSON body returned from http://74.208.158.232/fx_rates.json and map each rates entry into an Asset object: marketType=fiat, ticker=countryCode (e.g., \"ABW\"), name=countryName (e.g., \"Aruba, Kingdom of the Netherlands\").",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/utils/fiatFxRatesParser.ts",
-          "frontend/src/hooks/useAssetSearch.ts",
-          "frontend/src/components/assets/AssetSearch.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/utils/fiatFxRatesParser.ts",
-          "frontend/src/hooks/useAssetSearch.ts",
-          "frontend/src/components/assets/AssetSearch.tsx"
-        ]
+        "id": "REQ-1",
+        "summary": "Implement a backend canister flow to fetch Worker 0 stocks JSON from `api.assetsbag.com/stocks.json` in a single HTTP outcall (no batching/chunking), then store the returned JSON response body as-is for later inspection/use (same overall fetch→validate→store pattern used for FIAT/Commodities).",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       },
       {
-        "id": "REQ-22",
-        "summary": "Add a frontend data hook (or extend existing hooks) so that entering the Fiat market type automatically triggers a fetch/refresh of the VPS1 FIAT cache by calling fetchFiatVPS1Data(), then reads getFiatVPS1ValidationResult() and keeps the parsed FIAT Asset list in React Query cache for use by AssetSearch. Ensure loading and error states are handled in the Add‑Asset search UI without blocking other market types.",
+        "id": "REQ-2",
+        "summary": "Update the frontend Stocks market data path used by the Add-Asset search so it uses the new backend Worker0 stocks fetch/store/inspect flow (single endpoint only), and ensure the UI does not perform or describe any merge or marketCap-based sorting for stocks.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useFiatVPS1.ts",
-          "frontend/src/components/assets/AssetSearch.tsx"
+          "frontend/src/hooks/useStocksWorker0.ts",
+          "frontend/src/utils/stocksWorker0Parser.ts",
+          "frontend/src/components/assets/AssetSearch.tsx",
+          "frontend/src/hooks/useAssetSearch.ts",
+          "frontend/src/utils/stocksParser.ts",
+          "frontend/src/hooks/useStocksMerged.ts",
+          "frontend/src/backend.d.ts"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/useFiatVPS1.ts",
-          "frontend/src/components/assets/AssetSearch.tsx"
+          "frontend/src/hooks/useStocksWorker0.ts",
+          "frontend/src/utils/stocksWorker0Parser.ts",
+          "frontend/src/components/assets/AssetSearch.tsx",
+          "frontend/src/hooks/useAssetSearch.ts",
+          "frontend/src/utils/stocksParser.ts",
+          "frontend/src/hooks/useStocksMerged.ts",
+          "frontend/src/backend.d.ts"
         ]
       }
     ]
@@ -43,6 +45,7 @@
   "changedFiles": [
     "backend/main.mo",
     "build-request.json",
+    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
@@ -52,8 +55,10 @@
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
     "frontend/src/hooks/useAssetSearch.ts",
-    "frontend/src/hooks/useFiatVPS1.ts",
-    "frontend/src/utils/fiatFxRatesParser.ts",
+    "frontend/src/hooks/useStocksMerged.ts",
+    "frontend/src/hooks/useStocksWorker0.ts",
+    "frontend/src/utils/stocksParser.ts",
+    "frontend/src/utils/stocksWorker0Parser.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

@@ -1,49 +1,49 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { FiatVPS1ValidationResult, Asset } from '@/backend';
-import { parseFiatFxRates } from '@/utils/fiatFxRatesParser';
+import type { CommoditiesVPS1ValidationResult, Asset } from '@/backend';
+import { parseCommodities } from '@/utils/commoditiesParser';
 import { MarketType } from '@/types';
 
-export function useFetchFiatVPS1Data() {
+export function useFetchCommoditiesVPS1Data() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async () => {
       if (!actor) throw new Error('Actor not available');
-      return actor.fetchFiatVPS1Data();
+      return actor.fetchCommoditiesVPS1Data();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['fiatVPS1ValidationResult'] });
-      queryClient.invalidateQueries({ queryKey: ['fiatVPS1Assets'] });
+      queryClient.invalidateQueries({ queryKey: ['commoditiesVPS1ValidationResult'] });
+      queryClient.invalidateQueries({ queryKey: ['commoditiesVPS1Assets'] });
     },
   });
 }
 
-export function useGetFiatVPS1ValidationResult() {
+export function useGetCommoditiesVPS1ValidationResult() {
   const { actor, isFetching: actorFetching } = useActor();
 
-  return useQuery<FiatVPS1ValidationResult | null>({
-    queryKey: ['fiatVPS1ValidationResult'],
+  return useQuery<CommoditiesVPS1ValidationResult | null>({
+    queryKey: ['commoditiesVPS1ValidationResult'],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
-      return actor.getFiatVPS1ValidationResult();
+      return actor.getCommoditiesVPS1ValidationResult();
     },
     enabled: !!actor && !actorFetching,
   });
 }
 
 /**
- * Hook that fetches, parses, and caches FIAT assets from the VPS1 HTTPS endpoint.
+ * Hook that fetches, parses, and caches Commodities assets from the VPS1 HTTPS endpoint.
  * The backend controls the requested URL; the frontend only triggers fetch and parses validation/rawResponseBody.
  * Automatically triggers fetch when enabled and provides loading/error states.
  */
-export function useFiatVPS1Assets(enabled: boolean = false) {
+export function useCommoditiesVPS1Assets(enabled: boolean = false) {
   const { actor, isFetching: actorFetching } = useActor();
   const queryClient = useQueryClient();
 
   const query = useQuery({
-    queryKey: ['fiatVPS1Assets'],
+    queryKey: ['commoditiesVPS1Assets'],
     queryFn: async (): Promise<{
       assets: Asset[];
       validationStatus: 'valid' | 'invalid' | 'pending';
@@ -52,20 +52,20 @@ export function useFiatVPS1Assets(enabled: boolean = false) {
       if (!actor) throw new Error('Actor not available');
 
       // First, check if we have cached validation result
-      const cachedResult = await actor.getFiatVPS1ValidationResult();
+      const cachedResult = await actor.getCommoditiesVPS1ValidationResult();
 
       // If no cached result or invalid, trigger a fresh fetch
       if (!cachedResult || cachedResult.validationStatus === 'invalid') {
         try {
-          await actor.fetchFiatVPS1Data();
+          await actor.fetchCommoditiesVPS1Data();
           // Get the fresh result
-          const freshResult = await actor.getFiatVPS1ValidationResult();
+          const freshResult = await actor.getCommoditiesVPS1ValidationResult();
           
           if (!freshResult) {
             return {
               assets: [],
               validationStatus: 'invalid',
-              error: 'Failed to fetch FIAT data',
+              error: 'Failed to fetch commodities data',
             };
           }
 
@@ -73,12 +73,12 @@ export function useFiatVPS1Assets(enabled: boolean = false) {
             return {
               assets: [],
               validationStatus: 'invalid',
-              error: freshResult.errorMessage || 'Invalid FIAT data received',
+              error: freshResult.errorMessage || 'Invalid commodities data received',
             };
           }
 
           // Parse the response
-          const parseResult = parseFiatFxRates(freshResult.rawResponseBody);
+          const parseResult = parseCommodities(freshResult.rawResponseBody);
           
           return {
             assets: parseResult.assets,
@@ -90,14 +90,14 @@ export function useFiatVPS1Assets(enabled: boolean = false) {
           return {
             assets: [],
             validationStatus: 'invalid',
-            error: `Failed to fetch FIAT data: ${message}`,
+            error: `Failed to fetch commodities data: ${message}`,
           };
         }
       }
 
       // Use cached valid result
       if (cachedResult.validationStatus === 'valid') {
-        const parseResult = parseFiatFxRates(cachedResult.rawResponseBody);
+        const parseResult = parseCommodities(cachedResult.rawResponseBody);
         return {
           assets: parseResult.assets,
           validationStatus: 'valid',
@@ -108,7 +108,7 @@ export function useFiatVPS1Assets(enabled: boolean = false) {
       return {
         assets: [],
         validationStatus: 'pending',
-        error: 'Waiting for FIAT data',
+        error: 'Waiting for commodities data',
       };
     },
     enabled: !!actor && !actorFetching && enabled,
@@ -117,8 +117,8 @@ export function useFiatVPS1Assets(enabled: boolean = false) {
   });
 
   const refetch = () => {
-    queryClient.invalidateQueries({ queryKey: ['fiatVPS1ValidationResult'] });
-    queryClient.invalidateQueries({ queryKey: ['fiatVPS1Assets'] });
+    queryClient.invalidateQueries({ queryKey: ['commoditiesVPS1ValidationResult'] });
+    queryClient.invalidateQueries({ queryKey: ['commoditiesVPS1Assets'] });
     return query.refetch();
   };
 
